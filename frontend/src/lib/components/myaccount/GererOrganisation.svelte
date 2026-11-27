@@ -14,7 +14,6 @@
     let submitted = $state(false);
     let codeOrganisation = $state('');
 
-    let hasLeftOrga = $state(false);
     let showConfirmModal = $state(false);
     let showChangeModal = $state(false);
     let showInscriptionOrga = $state(false);
@@ -28,7 +27,6 @@
                 if (data) {
                     if (data.success) {
                         showConfirmModal = false;
-                        hasLeftOrga = true;
                         successMessage = $t(data.message || 'success.operation_success');
                         errorMessage = '';
                     } else if (data.message) {
@@ -51,7 +49,6 @@
                     if (data.success) {
                         codeOrganisation = '';
                         showChangeModal = false;
-                        hasLeftOrga = false;
                         successMessage = $t(data.message || 'success.operation_success');
                         errorMessage = '';
                     } else if (data.message) {
@@ -77,7 +74,6 @@
                 if (data) {
                     if (data.success) {
                         codeOrganisation = '';
-                        hasLeftOrga = false;
                         successMessage = $t(data.message || 'success.operation_success');
                         errorMessage = '';
                     } else if (data.message) {

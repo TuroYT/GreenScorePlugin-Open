@@ -1,15 +1,9 @@
 <script lang="ts">
     import { enhance } from '$app/forms';
-    import {page} from "$app/state";
     import { t } from 'svelte-i18n';
-    import type {User, UserFull} from "$lib/types/account.ts";
-
-    let userFull = $derived((page.form?.updatedUser as UserFull | undefined) ?? (page.data.userFull as UserFull));
-    let user = $derived(userFull.user as User);
 
     let { activePage = $bindable() } = $props();
     let showDeleteModal = $state(false);
-    let submitted = $state(false);
 
 
 </script>
@@ -102,9 +96,7 @@
                 <form
                         method="POST"
                         action="?/supprimer"
-                        use:enhance={() => {
-                            submitted = true;
-                        }}
+                        use:enhance
                         class="flex flex-col gap-4">
 
                 <button

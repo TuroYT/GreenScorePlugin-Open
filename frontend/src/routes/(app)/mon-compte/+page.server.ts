@@ -35,7 +35,9 @@ export const load: PageServerLoad = async ({ fetch, request, locals, url }) => {
                 try {
                     const data = await res.json();
                     if (data.success) members = data.members;
-                } catch {}
+                } catch (err) {
+                    console.error('Chargement des membres impossible', err);
+                }
             }
 
             const resServices = await fetch(`${BACKEND_URL}/account/organization/services`, {
@@ -47,7 +49,9 @@ export const load: PageServerLoad = async ({ fetch, request, locals, url }) => {
                  try {
                      const data = await resServices.json();
                      if (data.success) services = data.services;
-                 } catch {}
+                 } catch (err) {
+                    console.error('Chargement des services impossible', err);
+                }
             }
         }
     }
@@ -63,7 +67,9 @@ export const load: PageServerLoad = async ({ fetch, request, locals, url }) => {
             if (result.success && result.equivalents) {
                 accountEquivalents = result.equivalents;
             }
-        } catch {}
+        } catch (err) {
+                    console.error('Chargement des équivalents impossible', err);
+                }
     }
 
     return {
@@ -501,7 +507,9 @@ export const actions: Actions = {
 
                 try {
                     await setSessionCookie(cookies, response);
-                } catch (cookieError) {}
+                } catch (cookieError) {
+                    console.error('Écriture du cookie de session impossible', cookieError);
+                }
 
                 redirect(303, '?tab=organisation&action=new');
             } else {
@@ -560,7 +568,9 @@ export const actions: Actions = {
                     } else {
                         await setSessionCookie(cookies, response);
                     }
-                } catch (cookieError) {}
+                } catch (cookieError) {
+                    console.error('Écriture du cookie de session impossible', cookieError);
+                }
 
                 return {
                     actionType: 'change_orga',
@@ -653,7 +663,7 @@ export const actions: Actions = {
         }
 
         try{
-            let body = JSON.stringify({
+            const body = JSON.stringify({
                 organization_name: organisationName,
                 siret : siret || null,
             });
@@ -720,7 +730,9 @@ export const actions: Actions = {
 
             try {
                 await setSessionCookie(cookies, res);
-            } catch (cookieError) {}
+            } catch (cookieError) {
+                    console.error('Écriture du cookie de session impossible', cookieError);
+                }
 
             redirect(303, '?tab=organisation&action=new');
         } else {
