@@ -26,6 +26,7 @@ Fichier de configuration associé : `.github/protection-main.json` (corps de la 
 
 Le dossier de conception (§10) prévoit ces contrôles sur les pull requests. Aucun n'existe encore dans `.github/workflows/` : ils ne doivent être ajoutés à la liste des checks requis qu'une fois leur workflow en place et vert sur une PR, sinon toutes les PR restent bloquées.
 
+- compilation : déjà couverte par le job `Tests & Coverage` (la compilation précède les tests), tant qu'aucun job dédié n'existe
 - `cargo clippy`
 - `cargo fmt --check`
 - lint du front-end SvelteKit
@@ -37,7 +38,9 @@ Le dossier de conception (§10) prévoit ces contrôles sur les pull requests. A
 
 1. **Dépôt cible.** `origin` pointe vers `TuroYT/GreenScorePlugin-Open`, un fork, et `upstream` vers `green-score-plugin/GreenScorePlugin-Rust-Svelte`. Le dépôt à protéger doit être choisi. Le fichier JSON ne contient aucun nom de dépôt : il s'applique à celui qu'on désigne.
 2. **Administrateurs et revue à un seul relecteur.** Avec `enforce_admins` à `true` et une approbation requise, l'auteur d'une PR ne peut pas l'approuver lui-même : il faut un second membre disponible. Si l'équipe préfère qu'un administrateur puisse fusionner seul, passer `enforce_admins` à `false`.
-3. **Actions actives.** Vérifier que les workflows tournent sur le dépôt cible avant de rendre `Tests & Coverage` requis. Au moment de la rédaction, les Actions sont activées sur `TuroYT/GreenScorePlugin-Open` et le workflow `Tests Backend Rust` est actif.
+3. **Check jamais exécuté.** Les Actions sont activées sur `TuroYT/GreenScorePlugin-Open` et le workflow `Tests Backend Rust` est actif, mais aucune exécution n'a encore eu lieu sur ce dépôt (au moment de la rédaction). Un check requis qui n'a jamais tourné bloque toutes les PR. Il faut donc qu'une PR vers `main` ait déclenché `Tests & Coverage` une fois, et que ce check soit vert, avant de l'ajouter aux checks requis.
+
+4. **Issues désactivées.** Les Issues sont désactivées sur `TuroYT/GreenScorePlugin-Open` (au moment de la rédaction). Les modèles d'issues n'apparaîtront qu'une fois les Issues activées sur le dépôt cible.
 
 ## Application (après validation uniquement)
 
