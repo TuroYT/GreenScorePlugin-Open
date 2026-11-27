@@ -80,15 +80,14 @@ impl tower_sessions::SessionStore for MySqlStore {
             .map_err(|e: sqlx::Error| SessionError::Backend(e.to_string()))?;
 
         if let Some(r) = row {
-            if let Some(exp) = r.expires_at {
-                if exp <= Self::now_unix() {
+            if let Some(exp) = r.expires_at
+                && exp <= Self::now_unix() {
                     sqlx::query!("DELETE FROM sessions WHERE id = ?", id_str)
                         .execute(&self.pool)
                         .await
                         .map_err(|e: sqlx::Error| SessionError::Backend(e.to_string()))?;
                     return Ok(None);
                 }
-            }
             let record = serde_json::from_slice(&r.data)
                 .map_err(|e| SessionError::Decode(e.to_string()))?;
             Ok(Some(record))

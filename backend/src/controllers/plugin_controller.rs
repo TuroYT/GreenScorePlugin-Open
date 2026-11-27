@@ -19,8 +19,7 @@ pub async fn get_equivalent(session: Session, State(pool): State<MySqlPool>, Jso
     }
 
     let user_id: Option<i64> = session.get("user_full").await
-        .map_err(|_| AppError::InternalServerError("Session error".to_string()))?
-        .and_then(|user_full: UserFull| Some(user_full.user.id));
+        .map_err(|_| AppError::InternalServerError("Session error".to_string()))?.map(|user_full: UserFull| user_full.user.id);
 
     let equivalents = EquivalentService::equivalent(&pool, user_id, count, gco2).await
         .map_err(AppError::from)?;

@@ -138,11 +138,10 @@ pub async fn get_current_account(session: Session, State(pool): State<MySqlPool>
 
     if let Some(user_full) = user_full_opt {
         let mut services = None;
-        if let Some(org) = user_full.organisation.first() {
-             if let Ok(s) = ServiceService::get_organisation_services(&pool, org.id).await {
+        if let Some(org) = user_full.organisation.first()
+             && let Ok(s) = ServiceService::get_organisation_services(&pool, org.id).await {
                  services = Some(s);
              }
-        }
 
         Ok(Json(CurrentAccountResponse {
             success: true,

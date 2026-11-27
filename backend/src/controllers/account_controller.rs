@@ -52,7 +52,7 @@ pub async fn delete_account( session: Session, State(pool): State<MySqlPool>, Au
     let user_id = user_full.user.id;
 
     UserService::delete_user(&pool, user_id).await
-        .map_err(|e| AppError::DatabaseError(e))?;
+        .map_err(AppError::DatabaseError)?;
 
     session.remove::<UserFull>("user_full").await.map_err(|_| AppError::InternalServerError("errors.session_error".to_string()))?;
 
@@ -276,12 +276,11 @@ pub async fn leave_organization(
 
     user_full.organisation.retain(|o| o.id != orga_id);
 
-    if let Some(ref s) = user_full.service {
-        if s.id_organisation == orga_id {
+    if let Some(ref s) = user_full.service
+        && s.id_organisation == orga_id {
             user_full.service = None;
             user_full.user.id_service = None;
         }
-    }
 
     session.insert("user_full", user_full).await.map_err(|_| AppError::InternalServerError("errors.session_error".to_string()))?;
 
@@ -313,12 +312,11 @@ pub async fn delete_organization(
 
     user_full.organisation.remove(org_idx);
 
-    if let Some(ref s) = user_full.service {
-        if s.id_organisation == orga_id {
+    if let Some(ref s) = user_full.service
+        && s.id_organisation == orga_id {
             user_full.service = None;
             user_full.user.id_service = None;
         }
-    }
 
     session.insert("user_full", user_full).await
         .map_err(|_| AppError::InternalServerError("errors.session_error".to_string()))?;
@@ -362,11 +360,7 @@ pub async fn update_account_equivalents(State(pool): State<MySqlPool>, Authentic
         .filter_map(|v| {
              if let Some(s) = v.as_str() {
                  s.parse::<i64>().ok()
-             } else if let Some(i) = v.as_i64() {
-                 Some(i)
-             } else {
-                 None
-             }
+             } else { v.as_i64() }
         }).collect();
 
     EquivalentService::update_user_equivalents(&pool, user_id, equivalents).await

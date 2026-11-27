@@ -57,10 +57,8 @@ async fn devrait_retourner_2_equivalents_selectionne_get_all_equivalents_with_se
         .await
         .expect("Failed to insert user");
 
-    let expected_selected = vec![
-        "data.equivalent.lille_marseille",
-        "data.equivalent.emails"
-    ];
+    let expected_selected = ["data.equivalent.lille_marseille",
+        "data.equivalent.emails"];
 
     // Insert user equivalents manually (IDs 1 and 3 based on migration)
     for eq_id in [1, 3] {

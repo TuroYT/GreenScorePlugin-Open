@@ -13,7 +13,7 @@ impl UserService {
         pool: &MySqlPool,
         email: String
     ) -> bool {
-        let result = UserRepository::find_id_by_email(&pool, email).await.unwrap_or(None);
+        let result = UserRepository::find_id_by_email(pool, email).await.unwrap_or(None);
         result.is_some()
     }
 
@@ -26,7 +26,7 @@ impl UserService {
         let mut new_user = user.clone();
 
         if let Some(email) = payload.email.as_ref().filter(|e| *e != &new_user.email) {
-            let user_exists: bool = UserService::user_with_email_exists(&pool, email.to_string()).await;
+            let user_exists: bool = UserService::user_with_email_exists(pool, email.to_string()).await;
             if user_exists {
                 return Err("Cet email est déjà utilisé".to_string());
             }
@@ -58,7 +58,7 @@ impl UserService {
     }
 
     pub async fn delete_user(pool: &MySqlPool, user_id: i64) -> Result<(), Error> {
-        UserRepository::delete_user(&pool, user_id).await
+        UserRepository::delete_user(pool, user_id).await
     }
 
     pub async fn join_organization(pool: &MySqlPool, orga_code: String, user_id: i64) -> Result<Option<Organisation>, String> {

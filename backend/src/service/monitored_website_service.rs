@@ -80,7 +80,7 @@ impl MonitoredWebsiteService {
         ];
 
         let (letter, env_nomination, equivalents) = if let Some(ref infos) = last_search_info {
-            let (l, n) = calculate_green_score(&pool, infos.carbon_footprint, "lpc".to_string()).await;
+            let (l, n) = calculate_green_score(pool, infos.carbon_footprint, "lpc".to_string()).await;
 
             let eqs = EquivalentService::equivalent(pool, None, 2, infos.carbon_footprint).await;
             let eqs = match eqs {

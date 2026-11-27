@@ -71,14 +71,13 @@ impl OrganisationService {
             }
         }
 
-        if let Some(ref new_siret) = payload.siret {
-            if Some(new_siret) != current_org.siret.as_ref() {
+        if let Some(ref new_siret) = payload.siret
+            && Some(new_siret) != current_org.siret.as_ref() {
                 let existing = OrganisationRepository::find_id_by_siret(pool, new_siret).await.map_err(|e| e.to_string())?;
                 if existing.is_some() {
                     return Err("errors.org_siret_exists".to_string());
                 }
             }
-        }
 
         OrganisationRepository::update_organisation(pool, current_org.id, new_name, payload.siret.clone()).await.map_err(|e| e.to_string())?;
 
