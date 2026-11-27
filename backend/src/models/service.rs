@@ -4,5 +4,5 @@ use serde::{Deserialize, Serialize};
 pub struct Service {
     pub id: i64,
     pub id_organisation: i64,
-    pub nom: String
+    pub nom: String,
 }

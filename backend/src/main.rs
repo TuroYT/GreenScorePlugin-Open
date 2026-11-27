@@ -1,13 +1,13 @@
-use backend::session_store::MySqlStore;
-use backend::router;
+use axum::http::{HeaderValue, Method, header};
 use backend::cleanup;
+use backend::router;
+use backend::session_store::MySqlStore;
 use sqlx::MySqlPool;
 use std::env;
-use axum::http::{header, HeaderValue, Method};
-use tower_sessions::{SessionManagerLayer, Expiry};
 use time::Duration;
 use tower_http::cors::CorsLayer;
 use tower_http::trace::TraceLayer;
+use tower_sessions::{Expiry, SessionManagerLayer};
 
 #[tokio::main]
 async fn main() {
@@ -33,29 +33,26 @@ async fn main() {
 
     let cors = CorsLayer::new()
         .allow_origin([
-            "https://greenscore.alwaysdata.net".parse::<HeaderValue>().unwrap(),
+            "https://greenscore.alwaysdata.net"
+                .parse::<HeaderValue>()
+                .unwrap(),
             "http://localhost:5173".parse::<HeaderValue>().unwrap(),
-            "http://127.0.0.1:5173".parse::<HeaderValue>().unwrap()
+            "http://127.0.0.1:5173".parse::<HeaderValue>().unwrap(),
         ])
         .allow_methods([
             Method::GET,
             Method::POST,
             Method::DELETE,
             Method::PATCH,
-            Method::OPTIONS
+            Method::OPTIONS,
         ])
-        .allow_headers([
-            header::CONTENT_TYPE,
-            header::AUTHORIZATION,
-            header::COOKIE,
-        ])
+        .allow_headers([header::CONTENT_TYPE, header::AUTHORIZATION, header::COOKIE])
         .allow_credentials(true); // obligatoire pour cookies cross-site
 
     let app = router::create_router(pool)
         .layer(session_layer)
         .layer(cors)
         .layer(TraceLayer::new_for_http());
-
 
     let listener = tokio::net::TcpListener::bind(backend_url.clone())
         .await

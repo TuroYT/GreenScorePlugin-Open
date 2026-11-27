@@ -6,21 +6,21 @@ pub struct MoQuery {
     pub org_id: Option<i64>,
     pub service_id: Option<i64>,
 }
+use crate::dto::consumption_data_point_dto::ConsumptionDataPoint;
+use crate::dto::mo_infos_dto::MyOrganizationInfos;
 use crate::dto::top_polluting_site_dto::TopPollutingSite;
+use crate::error::AppError;
 use crate::green_score::calculate_green_score;
+use crate::middleware::auth::AuthenticatedUser;
+use crate::models::equivalent::Equivalent;
 use crate::service::advice_service::AdviceService;
 use crate::service::equivalent_service::EquivalentService;
 use crate::service::organisation_service::OrganisationService;
 use crate::service::service_service::ServiceService;
-use crate::models::equivalent::Equivalent;
-use axum::extract::State;
 use axum::Json;
+use axum::extract::State;
 use serde::Serialize;
 use sqlx::MySqlPool;
-use crate::dto::consumption_data_point_dto::ConsumptionDataPoint;
-use crate::dto::mo_infos_dto::MyOrganizationInfos;
-use crate::middleware::auth::AuthenticatedUser;
-use crate::error::AppError;
 
 #[derive(Serialize)]
 pub struct MyOrganizationResponse {
@@ -38,17 +38,28 @@ pub struct MyOrganizationResponse {
     pub services: Option<Vec<crate::models::service::Service>>,
 }
 
-
 pub async fn mo(
-    State(pool): State<MySqlPool>, 
+    State(pool): State<MySqlPool>,
     Query(query): Query<MoQuery>,
-    AuthenticatedUser(user_full): AuthenticatedUser
+    AuthenticatedUser(user_full): AuthenticatedUser,
 ) -> Result<Json<MyOrganizationResponse>, AppError> {
-
     let organization = if let Some(oid) = query.org_id {
-        user_full.organisation.iter().find(|o| o.id == oid).cloned().ok_or(AppError::NotFound("User is not in the specified organization".to_string()))?
+        user_full
+            .organisation
+            .iter()
+            .find(|o| o.id == oid)
+            .cloned()
+            .ok_or(AppError::NotFound(
+                "User is not in the specified organization".to_string(),
+            ))?
     } else {
-        user_full.organisation.first().cloned().ok_or(AppError::NotFound("User is not in an organization".to_string()))?
+        user_full
+            .organisation
+            .first()
+            .cloned()
+            .ok_or(AppError::NotFound(
+                "User is not in an organization".to_string(),
+            ))?
     };
 
     let organization_id = organization.id;
@@ -60,32 +71,68 @@ pub async fn mo(
         user_full.service.map(|s| s.id)
     };
 
-    let organization_informations = OrganisationService::organization_informations(&pool, organization_id, user_id, service_id).await
-        .map_err(AppError::from)?;
+    let organization_informations =
+        OrganisationService::organization_informations(&pool, organization_id, user_id, service_id)
+            .await
+            .map_err(AppError::from)?;
 
     let advices: Vec<String> = vec![
-        AdviceService::get_one_random_advice(&pool, false).await.unwrap_or_default(),
-        AdviceService::get_one_random_advice(&pool, true).await.unwrap_or_default(),
+        AdviceService::get_one_random_advice(&pool, false)
+            .await
+            .unwrap_or_default(),
+        AdviceService::get_one_random_advice(&pool, true)
+            .await
+            .unwrap_or_default(),
     ];
 
-    let (letter, env_nomination) = calculate_green_score(&pool, organization_informations.average_daily_carbon_footprint, "mo".to_string()).await;
+    let (letter, env_nomination) = calculate_green_score(
+        &pool,
+        organization_informations.average_daily_carbon_footprint,
+        "mo".to_string(),
+    )
+    .await;
 
-    let equivalents = EquivalentService::equivalent(&pool, Some(user_id), 2, organization_informations.total_consumption).await
-        .ok();
+    let equivalents = EquivalentService::equivalent(
+        &pool,
+        Some(user_id),
+        2,
+        organization_informations.total_consumption,
+    )
+    .await
+    .ok();
 
-    let daily_consumption = OrganisationService::get_daily_organization_consumption(&pool, organization_id, service_id).await
-        .map_err(AppError::from)?;
-    let weekly_consumption = OrganisationService::get_weekly_organization_consumption(&pool, organization_id, service_id).await
-        .map_err(AppError::from)?;
-    let monthly_consumption = OrganisationService::get_monthly_organization_consumption(&pool, organization_id, service_id).await
-        .map_err(AppError::from)?;
-    let top_polluting_sites = OrganisationService::get_top5_polluting_sites_by_organization(&pool, organization_id, service_id).await
-        .map_err(AppError::from)?;
+    let daily_consumption =
+        OrganisationService::get_daily_organization_consumption(&pool, organization_id, service_id)
+            .await
+            .map_err(AppError::from)?;
+    let weekly_consumption = OrganisationService::get_weekly_organization_consumption(
+        &pool,
+        organization_id,
+        service_id,
+    )
+    .await
+    .map_err(AppError::from)?;
+    let monthly_consumption = OrganisationService::get_monthly_organization_consumption(
+        &pool,
+        organization_id,
+        service_id,
+    )
+    .await
+    .map_err(AppError::from)?;
+    let top_polluting_sites = OrganisationService::get_top5_polluting_sites_by_organization(
+        &pool,
+        organization_id,
+        service_id,
+    )
+    .await
+    .map_err(AppError::from)?;
 
     let is_admin = organization.est_admin;
 
     let services = if is_admin {
-        ServiceService::get_organisation_services(&pool, organization_id).await.ok()
+        ServiceService::get_organisation_services(&pool, organization_id)
+            .await
+            .ok()
     } else {
         None
     };

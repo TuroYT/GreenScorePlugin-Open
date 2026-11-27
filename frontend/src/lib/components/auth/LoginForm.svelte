@@ -9,6 +9,7 @@
     let email = '';
 
     $: if (form?.message) {
+        // eslint-disable-next-line no-useless-assignment -- réactivité Svelte : `$:` réinitialise loading
         loading = false;
     }
 

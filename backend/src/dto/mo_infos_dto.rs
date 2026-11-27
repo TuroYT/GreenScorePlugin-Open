@@ -1,5 +1,5 @@
-use serde::{Deserialize, Serialize};
 use crate::models::equivalent::Equivalent;
+use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Serialize, Deserialize, Clone, sqlx::FromRow)]
 pub struct MyOrganizationInfos {

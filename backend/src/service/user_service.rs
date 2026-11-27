@@ -1,19 +1,18 @@
-use sqlx::{Error, MySqlPool};
-use crate::models::user::User;
-use crate::repository::user_repository::UserRepository;
+use crate::dto::member_dto::MemberDto;
 use crate::dto::update_account_request_dto::UpdateAccountRequest;
 use crate::models::organisation::Organisation;
+use crate::models::user::User;
 use crate::repository::organisation_repository::OrganisationRepository;
-use crate::dto::member_dto::MemberDto;
+use crate::repository::user_repository::UserRepository;
+use sqlx::{Error, MySqlPool};
 
 pub struct UserService;
 
 impl UserService {
-    pub async fn user_with_email_exists(
-        pool: &MySqlPool,
-        email: String
-    ) -> bool {
-        let result = UserRepository::find_id_by_email(&pool, email).await.unwrap_or(None);
+    pub async fn user_with_email_exists(pool: &MySqlPool, email: String) -> bool {
+        let result = UserRepository::find_id_by_email(pool, email)
+            .await
+            .unwrap_or(None);
         result.is_some()
     }
 
@@ -22,11 +21,11 @@ impl UserService {
         user: User,
         payload: UpdateAccountRequest,
     ) -> Result<User, String> {
-
         let mut new_user = user.clone();
 
         if let Some(email) = payload.email.as_ref().filter(|e| *e != &new_user.email) {
-            let user_exists: bool = UserService::user_with_email_exists(&pool, email.to_string()).await;
+            let user_exists: bool =
+                UserService::user_with_email_exists(pool, email.to_string()).await;
             if user_exists {
                 return Err("Cet email est déjà utilisé".to_string());
             }
@@ -58,10 +57,14 @@ impl UserService {
     }
 
     pub async fn delete_user(pool: &MySqlPool, user_id: i64) -> Result<(), Error> {
-        UserRepository::delete_user(&pool, user_id).await
+        UserRepository::delete_user(pool, user_id).await
     }
 
-    pub async fn join_organization(pool: &MySqlPool, orga_code: String, user_id: i64) -> Result<Option<Organisation>, String> {
+    pub async fn join_organization(
+        pool: &MySqlPool,
+        orga_code: String,
+        user_id: i64,
+    ) -> Result<Option<Organisation>, String> {
         let orga = OrganisationRepository::find_organization_by_code(pool, orga_code)
             .await
             .map_err(|e| e.to_string())?;
@@ -71,8 +74,11 @@ impl UserService {
             None => return Err("Code d'organisation invalide".to_string()),
         };
 
-        if UserRepository::is_member_of_organisation(pool, user_id, orga_id).await.unwrap_or(false) {
-             return Err("Déjà membre de cette organisation".to_string());
+        if UserRepository::is_member_of_organisation(pool, user_id, orga_id)
+            .await
+            .unwrap_or(false)
+        {
+            return Err("Déjà membre de cette organisation".to_string());
         }
 
         UserRepository::join_organisation(pool, user_id, orga_id, false)
@@ -80,14 +86,20 @@ impl UserService {
             .map_err(|e| e.to_string())?;
 
         Ok(orga)
-
     }
 
-    pub async fn get_organization_members(pool: &MySqlPool, orga_id: i64) -> Result<Vec<MemberDto>, Error> {
+    pub async fn get_organization_members(
+        pool: &MySqlPool,
+        orga_id: i64,
+    ) -> Result<Vec<MemberDto>, Error> {
         UserRepository::get_organization_members(pool, orga_id).await
     }
 
-    pub async fn remove_organization_member(pool: &MySqlPool, user_id: i64, orga_id: i64) -> Result<(), Error> {
+    pub async fn remove_organization_member(
+        pool: &MySqlPool,
+        user_id: i64,
+        orga_id: i64,
+    ) -> Result<(), Error> {
         UserRepository::remove_organization_member(pool, user_id, orga_id).await
     }
 }

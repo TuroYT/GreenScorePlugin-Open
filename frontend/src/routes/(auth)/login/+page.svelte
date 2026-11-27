@@ -2,7 +2,6 @@
     import AuthBase from '$lib/components/auth/AuthBase.svelte';
     import LoginForm from '$lib/components/auth/LoginForm.svelte';
     import { page } from '$app/stores';
-    import { onMount } from 'svelte';
     import { browser } from '$app/environment';
     import { t } from 'svelte-i18n';
 
@@ -17,6 +16,7 @@
         window.history.replaceState({}, '', newUrl);
 
         setTimeout(() => {
+            // eslint-disable-next-line svelte/infinite-reactive-loop -- appelé dans setTimeout, pas de boucle
             showDeletedToast = false;
         }, 5000);
     }
