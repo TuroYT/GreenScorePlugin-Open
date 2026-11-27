@@ -1,7 +1,7 @@
 use axum::{
+    Json,
     http::StatusCode,
     response::{IntoResponse, Response},
-    Json,
 };
 use serde_json::json;
 
@@ -18,7 +18,10 @@ impl IntoResponse for AppError {
     fn into_response(self) -> Response {
         let (status, error_message) = match self {
             AppError::AuthError(msg) => (StatusCode::UNAUTHORIZED, msg),
-            AppError::DatabaseError(_) => (StatusCode::INTERNAL_SERVER_ERROR, "errors.db_error".to_string()), // Hide SQL errors from user
+            AppError::DatabaseError(_) => (
+                StatusCode::INTERNAL_SERVER_ERROR,
+                "errors.db_error".to_string(),
+            ), // Hide SQL errors from user
             AppError::BadRequest(msg) => (StatusCode::BAD_REQUEST, msg),
             AppError::NotFound(msg) => (StatusCode::NOT_FOUND, msg),
             AppError::InternalServerError(msg) => (StatusCode::INTERNAL_SERVER_ERROR, msg),
@@ -44,4 +47,3 @@ impl From<String> for AppError {
         AppError::InternalServerError(err)
     }
 }
-

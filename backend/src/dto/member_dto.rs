@@ -14,6 +14,5 @@ pub struct MemberDto {
     #[serde(default)]
     pub total_carbon_footprint: f64,
     #[sqlx(default)]
-    pub service_name: Option<String>
+    pub service_name: Option<String>,
 }
-

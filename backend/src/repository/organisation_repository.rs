@@ -1,12 +1,14 @@
 use crate::models::organisation::Organisation;
-use sqlx::Row;
 use sqlx::MySqlPool;
+use sqlx::Row;
 
 pub struct OrganisationRepository;
 
 impl OrganisationRepository {
-
-    pub async fn find_by_id(pool: &MySqlPool, organisation_id: i64) -> Result<Option<Organisation>, sqlx::Error> {
+    pub async fn find_by_id(
+        pool: &MySqlPool,
+        organisation_id: i64,
+    ) -> Result<Option<Organisation>, sqlx::Error> {
         let organisation = sqlx::query_as::<_, Organisation>(
             "SELECT id, organisation_name, organisation_code, siret, false as est_admin FROM organisation WHERE id = ?"
         )
@@ -17,23 +19,27 @@ impl OrganisationRepository {
         Ok(organisation)
     }
 
-    pub async fn find_id_by_siret(pool: &MySqlPool, siret: &str) -> Result<Option<i64>, sqlx::Error> {
-        let result = sqlx::query(
-            "SELECT id FROM organisation WHERE siret = ?"
-        )
-        .bind(siret)
-        .fetch_optional(pool)
-        .await?;
+    pub async fn find_id_by_siret(
+        pool: &MySqlPool,
+        siret: &str,
+    ) -> Result<Option<i64>, sqlx::Error> {
+        let result = sqlx::query("SELECT id FROM organisation WHERE siret = ?")
+            .bind(siret)
+            .fetch_optional(pool)
+            .await?;
 
         Ok(result.map(|row| row.get::<i64, _>("id")))
     }
 
-    pub async fn find_all_by_user_id(pool: &MySqlPool, user_id: i64) -> Result<Vec<Organisation>, sqlx::Error> {
+    pub async fn find_all_by_user_id(
+        pool: &MySqlPool,
+        user_id: i64,
+    ) -> Result<Vec<Organisation>, sqlx::Error> {
         let organisations = sqlx::query_as::<_, Organisation>(
             "SELECT o.id, o.organisation_name, o.organisation_code, o.siret, ou.est_admin
              FROM organisation o
              JOIN organisation_user ou ON o.id = ou.organisation_id
-             WHERE ou.user_id = ?"
+             WHERE ou.user_id = ?",
         )
         .bind(user_id)
         .fetch_all(pool)
@@ -42,10 +48,12 @@ impl OrganisationRepository {
         Ok(organisations)
     }
 
-    pub async fn insert_organisation(pool: &MySqlPool,
-                                 organisation_name: &str,
-                                 organisation_code: &str,
-                                 siret: Option<String>) -> Result<i64, sqlx::Error> {
+    pub async fn insert_organisation(
+        pool: &MySqlPool,
+        organisation_name: &str,
+        organisation_code: &str,
+        siret: Option<String>,
+    ) -> Result<i64, sqlx::Error> {
         let result = sqlx::query(
             "INSERT INTO organisation (organisation_name, organisation_code, siret) VALUES (?, ?, ?)"
         )
@@ -57,10 +65,11 @@ impl OrganisationRepository {
         Ok(result.last_insert_id() as i64)
     }
 
-    pub async fn organization_name(pool: &MySqlPool, orga_id: i64) -> Result<Option<String>, sqlx::Error> {
-        sqlx::query_scalar::<_, String>(
-            "SELECT organisation_name FROM organisation WHERE id = ?"
-        )
+    pub async fn organization_name(
+        pool: &MySqlPool,
+        orga_id: i64,
+    ) -> Result<Option<String>, sqlx::Error> {
+        sqlx::query_scalar::<_, String>("SELECT organisation_name FROM organisation WHERE id = ?")
             .bind(orga_id)
             .fetch_optional(pool)
             .await
@@ -77,7 +86,7 @@ impl OrganisationRepository {
         pool: &MySqlPool,
         id: i64,
         name: &str,
-        siret: Option<String>
+        siret: Option<String>,
     ) -> Result<(), sqlx::Error> {
         sqlx::query("UPDATE organisation SET organisation_name = ?, siret = ? WHERE id = ?")
             .bind(name)
@@ -88,7 +97,10 @@ impl OrganisationRepository {
         Ok(())
     }
 
-    pub async fn find_organization_by_code(pool: &MySqlPool, org_code: String) -> Result<Option<Organisation>, sqlx::Error> {
+    pub async fn find_organization_by_code(
+        pool: &MySqlPool,
+        org_code: String,
+    ) -> Result<Option<Organisation>, sqlx::Error> {
         sqlx::query_as::<_, Organisation>(
             "SELECT id, organisation_name, organisation_code, siret, false as est_admin FROM organisation WHERE organisation_code = ?"
         )
@@ -97,7 +109,10 @@ impl OrganisationRepository {
             .await
     }
 
-    pub async fn delete_organization(pool: &MySqlPool, organisation_id: i64) -> Result<(), sqlx::Error> {
+    pub async fn delete_organization(
+        pool: &MySqlPool,
+        organisation_id: i64,
+    ) -> Result<(), sqlx::Error> {
         sqlx::query("DELETE FROM organisation WHERE id = ?")
             .bind(organisation_id)
             .execute(pool)

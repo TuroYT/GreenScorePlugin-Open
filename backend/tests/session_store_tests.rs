@@ -1,9 +1,9 @@
 use backend::session_store::MySqlStore;
 use sqlx::MySqlPool;
-use tower_sessions::session::Record;
-use tower_sessions::SessionStore;
-use time::OffsetDateTime;
 use std::collections::HashMap;
+use time::OffsetDateTime;
+use tower_sessions::SessionStore;
+use tower_sessions::session::Record;
 
 #[sqlx::test]
 async fn devrait_creer_et_charger_une_session(pool: MySqlPool) {
@@ -23,7 +23,10 @@ async fn devrait_creer_et_charger_une_session(pool: MySqlPool) {
     assert!(create_result.is_ok(), "La création devrait réussir");
     assert!(load_result.is_ok(), "Le chargement devrait réussir");
     let loaded_record = load_result.unwrap().expect("Le record devrait exister");
-    assert_eq!(loaded_record.id, record.id, "Les IDs devraient correspondre");
+    assert_eq!(
+        loaded_record.id, record.id,
+        "Les IDs devraient correspondre"
+    );
 }
 
 #[sqlx::test]
@@ -87,7 +90,10 @@ async fn devrait_nettoyer_une_session_expigree_au_chargement(pool: MySqlPool) {
     let load_result = store.load(&record.id).await.unwrap();
 
     // THEN
-    assert!(load_result.is_none(), "Une session expirée devrait renvoyer None");
+    assert!(
+        load_result.is_none(),
+        "Une session expirée devrait renvoyer None"
+    );
 
     // Et elle devrait avoir été supprimée de la base
     let count: i64 = sqlx::query_scalar("SELECT COUNT(*) FROM sessions WHERE id = ?")
@@ -98,4 +104,3 @@ async fn devrait_nettoyer_une_session_expigree_au_chargement(pool: MySqlPool) {
 
     assert_eq!(count, 0, "La session expirée doit être supprimée de la BDD");
 }
-

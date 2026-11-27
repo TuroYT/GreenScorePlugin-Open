@@ -1,8 +1,8 @@
+use backend::models::user::User;
+use backend::repository::organisation_repository::OrganisationRepository;
+use backend::repository::user_repository::UserRepository;
 use sqlx::MySqlPool;
 use sqlx::Row;
-use backend::repository::user_repository::UserRepository;
-use backend::repository::organisation_repository::OrganisationRepository;
-use backend::models::user::User;
 
 #[sqlx::test]
 async fn devrait_inserer_et_trouver_user(pool: MySqlPool) {
@@ -67,15 +67,20 @@ async fn devrait_rejoindre_organisation(pool: MySqlPool) {
 
     // THEN
     // Verify in organisation_user table directly as User struct doesn't hold this anymore
-    let row = sqlx::query("SELECT est_admin FROM organisation_user WHERE user_id = ? AND organisation_id = ?")
-        .bind(user_id)
-        .bind(org_id)
-        .fetch_optional(&pool)
-        .await
-        .expect("Failed to query organisation_user");
+    let row = sqlx::query(
+        "SELECT est_admin FROM organisation_user WHERE user_id = ? AND organisation_id = ?",
+    )
+    .bind(user_id)
+    .bind(org_id)
+    .fetch_optional(&pool)
+    .await
+    .expect("Failed to query organisation_user");
 
     assert!(row.is_some());
-    let is_admin: bool = row.unwrap().try_get("est_admin").expect("Failed to get est_admin");
+    let is_admin: bool = row
+        .unwrap()
+        .try_get("est_admin")
+        .expect("Failed to get est_admin");
     assert!(is_admin);
 }
 
@@ -128,10 +133,11 @@ async fn devrait_mettre_a_jour_user(pool: MySqlPool) {
         .expect("Failed to update user");
 
     // THEN
-    let (id, pwd, fname, lname, _) = UserRepository::find_with_password_by_email(&pool, "updated@test.com")
-        .await
-        .expect("Failed to find user")
-        .unwrap();
+    let (id, pwd, fname, lname, _) =
+        UserRepository::find_with_password_by_email(&pool, "updated@test.com")
+            .await
+            .expect("Failed to find user")
+            .unwrap();
 
     assert_eq!(id, user_id);
     assert_eq!(pwd, "new_pwd");
@@ -167,13 +173,19 @@ async fn devrait_gerer_membres_organisation(pool: MySqlPool) {
         .expect("Failed to insert org");
 
     let u1 = UserRepository::insert_user(&pool, "u1@org.com", "p", "U", "One")
-        .await.expect("Insert u1");
+        .await
+        .expect("Insert u1");
     let u2 = UserRepository::insert_user(&pool, "u2@org.com", "p", "U", "Two")
-        .await.expect("Insert u2");
+        .await
+        .expect("Insert u2");
 
     // Add to org
-    UserRepository::update_user_organization(&pool, u1, org_id).await.expect("Add u1");
-    UserRepository::update_user_organization(&pool, u2, org_id).await.expect("Add u2");
+    UserRepository::update_user_organization(&pool, u1, org_id)
+        .await
+        .expect("Add u1");
+    UserRepository::update_user_organization(&pool, u2, org_id)
+        .await
+        .expect("Add u2");
 
     // WHEN
     let members = UserRepository::get_organization_members(&pool, org_id)
