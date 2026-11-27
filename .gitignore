@@ -1,1 +1,4 @@
 .idea
+# BMAD : sorties générées par les workflows
+_bmad-output/
+_bmad/
