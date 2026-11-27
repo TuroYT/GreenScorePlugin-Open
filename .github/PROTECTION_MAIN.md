@@ -60,5 +60,5 @@ Test conseillé : ouvrir une PR de test, vérifier que le bouton de fusion est b
 ## Annulation
 
 ```bash
-gh api --method DELETE repos/OWNER/REPO/branches/main/protection
+gh api --method DELETE repos/TuroYT/GreenScorePlugin-Open/branches/main/protection
 ```

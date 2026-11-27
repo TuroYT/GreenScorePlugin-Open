@@ -4,12 +4,12 @@ Liste des labels proposés pour les issues et les pull requests. Rien n'est cré
 
 ## Labels déjà présents sur le dépôt
 
-Ces labels viennent des valeurs par défaut de GitHub. Les modèles d'issues utilisent `bug` et `enhancement`, qui existent déjà.
+Ces labels viennent des valeurs par défaut de GitHub.
 
 | Label | Usage |
 | --- | --- |
-| `bug` | Comportement incorrect ou plantage (utilisé par le modèle Bug) |
-| `enhancement` | Nouvelle fonctionnalité ou amélioration (utilisé par le modèle Fonctionnalité) |
+| `bug` | Comportement incorrect ou plantage |
+| `enhancement` | Nouvelle fonctionnalité ou amélioration |
 | `documentation` | Changement de documentation seule |
 | `question` | Question sans changement de code attendu |
 | `duplicate`, `invalid`, `wontfix` | Fermeture sans correction |
@@ -38,4 +38,4 @@ Commande à lancer une fois par label, en remplaçant `OWNER/REPO` :
 gh label create backend --repo OWNER/REPO --color 1d76db --description "Changement dans l'API Rust"
 ```
 
-Les modèles d'issues ne référencent que `bug` et `enhancement`. Les labels proposés ci-dessus ne sont donc pas nécessaires au fonctionnement des modèles : ils servent au tri et aux filtres.
+Aucun modèle d'issue ni aucun automatisme ne pose ces labels pour l'instant : ils servent au tri et aux filtres, sur les issues comme sur les pull requests.
