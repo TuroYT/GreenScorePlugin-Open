@@ -1,0 +1,44 @@
+name: Tests Frontend
+
+on:
+  pull_request:
+    branches: ["main", "master"]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  verifications:
+    name: Svelte, lint et tests
+    # Pas de runner Pitlane pour les PR venant d'un fork.
+    if: github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository
+    runs-on: pitlane
+
+    defaults:
+      run:
+        working-directory: ./frontend
+
+    steps:
+      - name: Checkout du code
+        uses: actions/checkout@v4
+
+      - name: Installation de Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+
+      - name: Installation des dépendances
+        run: npm ci
+
+      - name: Vérification Svelte et TypeScript (svelte-check)
+        run: npm run check
+
+      # Le front n'a pas (encore) de script lint ni de script test : ces étapes sont sautées tant qu'ils n'existent pas.
+      - name: Lint (npm run lint, si le script existe)
+        run: npm run lint --if-present
+
+      - name: Tests Vitest (npm test, si le script existe)
+        run: npm test --if-present

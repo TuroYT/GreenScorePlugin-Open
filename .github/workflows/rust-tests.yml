@@ -13,9 +13,36 @@ env:
   CARGO_TERM_COLOR: always
 
 jobs:
+  lint:
+    name: Format et Clippy
+    # Pas de runner Pitlane pour les PR venant d'un fork.
+    if: github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository
+    runs-on: pitlane
+
+    defaults:
+      run:
+        working-directory: ./backend
+
+    steps:
+      - name: Checkout du code
+        uses: actions/checkout@v4
+
+      - name: Installation de Rust
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          components: rustfmt, clippy
+
+      - name: Vérification du formatage
+        run: cargo fmt --check
+
+      - name: Analyse Clippy
+        run: cargo clippy --all-targets --all-features -- -D warnings
+
   test:
     name: Tests & Coverage
-    runs-on: ubuntu-latest
+    # Pas de runner Pitlane pour les PR venant d'un fork.
+    if: github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository
+    runs-on: pitlane
 
     services:
       mysql:
@@ -23,12 +50,11 @@ jobs:
         env:
           MYSQL_ROOT_PASSWORD: root
           MYSQL_DATABASE: greenscoreweb_database
+        # Port hôte attribué au hasard : deux jobs sur le même runner ne se disputent pas 3306.
         ports:
-          - 3306:3306
-        options: --health-cmd="mysqladmin ping" --health-interval=10s --health-timeout=5s --health-retries=3
-
-    env:
-      DATABASE_URL: mysql://root:root@localhost:3306/greenscoreweb_database
+          - 3306
+        # L'initialisation de MySQL peut dépasser 40 s sur un runner chargé : on ne compte pas les échecs pendant cette période.
+        options: --health-cmd="mysqladmin ping" --health-interval=10s --health-timeout=5s --health-retries=3 --health-start-period=60s
 
     defaults:
       run:
@@ -49,7 +75,7 @@ jobs:
           tool: cargo-nextest,cargo-llvm-cov
 
       - name: Cache Cargo
-        uses: actions/cache@v3
+        uses: actions/cache@v4
         with:
           path: |
             ~/.cargo/registry/index/
@@ -60,12 +86,16 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-cargo-
 
-      - name: Setup Database Schema
+      - name: Chargement du schéma de test
+        env:
+          MYSQL_CONTAINER: ${{ job.services.mysql.id }}
+        # Le client mysql est lancé dans le conteneur du service : pas besoin de l'installer sur le runner.
         run: |
-          sudo apt-get update && sudo apt-get install -y mysql-client
-          mysql -h 127.0.0.1 -P 3306 -u root -proot -D greenscoreweb_database < migrations/20260325091757_sql_test.sql
+          docker exec -i "$MYSQL_CONTAINER" mysql -uroot -proot greenscoreweb_database < migrations/20260325091757_sql_test.sql
 
       - name: Exécution des tests et génération du rapport HTML
+        env:
+          DATABASE_URL: mysql://root:root@127.0.0.1:${{ job.services.mysql.ports['3306'] }}/greenscoreweb_database
         run: |
           cargo llvm-cov nextest --all-features --workspace --ignore-filename-regex "src[/\\](main|cleanup|router)\.rs" --html
 
