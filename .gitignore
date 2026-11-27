@@ -2,3 +2,5 @@
 # BMAD : sorties générées par les workflows
 _bmad-output/
 _bmad/
+# Configuration et worktrees locaux de Claude Code
+.claude/
