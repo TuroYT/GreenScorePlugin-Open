@@ -10,9 +10,7 @@ Fichier de configuration associé : `.github/protection-main.json` (corps de la 
 | --- | --- | --- |
 | Push direct sur `main` | Interdit | Chaque changement passe par une pull request |
 | Pull request obligatoire | Oui | Fusion uniquement par PR relue (dossier de conception §10) |
-| Approbations requises | 1 | Une relecture au minimum avant fusion |
-| Approbations périmées | Annulées à chaque nouveau commit | Une relecture porte sur le code relu |
-| Dernier push approuvé | Oui | Le dernier commit doit aussi être relu |
+| Approbations requises | 0 | Décision de l'équipe : la fusion se fait dès que la CI passe, sans second relecteur |
 | Checks requis | `Tests & Coverage`, à jour avant fusion | Tests du backend Rust (`rust-tests.yml`) |
 | Conversations résolues | Oui | Aucune remarque de revue ne reste ouverte |
 | Force push | Interdit | Pas de réécriture de l'historique partagé |
@@ -34,29 +32,30 @@ Le dossier de conception (§10) prévoit ces contrôles sur les pull requests. A
 
 `deploy.yml` ne se déclenche que manuellement (`workflow_dispatch`) : ce n'est pas un check de PR et il ne doit pas être requis.
 
-## Points à trancher avant application
+## Décisions prises
 
-1. **Dépôt cible.** `origin` pointe vers `TuroYT/GreenScorePlugin-Open`, un fork, et `upstream` vers `green-score-plugin/GreenScorePlugin-Rust-Svelte`. Le dépôt à protéger doit être choisi. Le fichier JSON ne contient aucun nom de dépôt : il s'applique à celui qu'on désigne.
-2. **Administrateurs et revue à un seul relecteur.** Avec `enforce_admins` à `true` et une approbation requise, l'auteur d'une PR ne peut pas l'approuver lui-même : il faut un second membre disponible. Si l'équipe préfère qu'un administrateur puisse fusionner seul, passer `enforce_admins` à `false`.
-3. **Check jamais exécuté.** Les Actions sont activées sur `TuroYT/GreenScorePlugin-Open` et le workflow `Tests Backend Rust` est actif, mais aucune exécution n'a encore eu lieu sur ce dépôt (au moment de la rédaction). Un check requis qui n'a jamais tourné bloque toutes les PR. Il faut donc qu'une PR vers `main` ait déclenché `Tests & Coverage` une fois, et que ce check soit vert, avant de l'ajouter aux checks requis.
+- **Dépôt cible** : `TuroYT/GreenScorePlugin-Open`.
+- **Administrateurs soumis aux règles** : oui. Sans cela, le push direct sur `main` resterait possible pour le mainteneur, ce que l'équipe refuse.
+- **Pas d'approbation requise** : l'auteur d'une PR peut fusionner dès que `Tests & Coverage` est vert. Le ticket §10 parle de « revue obligatoire » : cette décision l'écarte, à garder en tête si la revue doit revenir plus tard.
+- **Pas de modèles d'issues** pour l'instant : les Issues restent désactivées, les formulaires d'issues ont été retirés.
 
-4. **Issues désactivées.** Les Issues sont désactivées sur `TuroYT/GreenScorePlugin-Open` (au moment de la rédaction). Les modèles d'issues n'apparaîtront qu'une fois les Issues activées sur le dépôt cible.
+## Prérequis avant application
+
+Un check requis qui n'a jamais tourné bloque toutes les PR. Il faut donc qu'une PR vers `main` ait déclenché `Tests & Coverage` une fois, et que ce check soit vert, avant d'appliquer la protection.
 
 ## Application (après validation uniquement)
 
-Remplacer `OWNER/REPO` par le dépôt choisi, puis lancer depuis la racine du dépôt :
-
 ```bash
-gh api --method PUT repos/OWNER/REPO/branches/main/protection --input .github/protection-main.json
+gh api --method PUT repos/TuroYT/GreenScorePlugin-Open/branches/main/protection --input .github/protection-main.json
 ```
 
 Vérifier ensuite :
 
 ```bash
-gh api repos/OWNER/REPO/branches/main/protection --jq '{checks: .required_status_checks.contexts, reviews: .required_pull_request_reviews.required_approving_review_count, admins: .enforce_admins.enabled}'
+gh api repos/TuroYT/GreenScorePlugin-Open/branches/main/protection --jq '{checks: .required_status_checks.contexts, reviews: .required_pull_request_reviews.required_approving_review_count, admins: .enforce_admins.enabled}'
 ```
 
-Test conseillé : ouvrir une PR de test sans l'approuver et vérifier que le bouton de fusion reste bloqué. Ne pas tester par un push direct sur `main`.
+Test conseillé : ouvrir une PR de test, vérifier que le bouton de fusion est bloqué tant que `Tests & Coverage` n'est pas vert, puis qu'il se débloque une fois vert. Vérifier aussi qu'un push direct sur `main` est refusé. Ne pas faire ce test sur `main` lui-même si la règle n'est pas encore active.
 
 ## Annulation
 
