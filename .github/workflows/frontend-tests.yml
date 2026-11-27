@@ -36,7 +36,6 @@ jobs:
       - name: Vérification Svelte et TypeScript (svelte-check)
         run: npm run check
 
-      # Le front n'a pas (encore) de script lint ni de script test : ces étapes sont sautées tant qu'ils n'existent pas.
       - name: Lint (npm run lint, si le script existe)
         run: npm run lint --if-present
 

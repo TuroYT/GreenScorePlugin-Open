@@ -89,7 +89,6 @@ jobs:
       - name: Chargement du schéma de test
         env:
           MYSQL_CONTAINER: ${{ job.services.mysql.id }}
-        # Le client mysql est lancé dans le conteneur du service : pas besoin de l'installer sur le runner.
         run: |
           docker exec -i "$MYSQL_CONTAINER" mysql -uroot -proot greenscoreweb_database < migrations/20260325091757_sql_test.sql
 
