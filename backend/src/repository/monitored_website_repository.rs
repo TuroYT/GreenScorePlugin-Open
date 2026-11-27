@@ -1,8 +1,8 @@
-use sqlx::{MySqlPool, Error};
-use crate::models::monitored_website::MonitoredWebsite;
+use crate::dto::consumption_data_point_dto::ConsumptionDataPoint;
 use crate::dto::lpc_dto::LastPageConsultedInfos;
 use crate::dto::top_polluting_site_dto::TopPollutingSite;
-use crate::dto::consumption_data_point_dto::ConsumptionDataPoint;
+use crate::models::monitored_website::MonitoredWebsite;
+use sqlx::{Error, MySqlPool};
 
 pub struct MonitoredWebsiteRepository;
 
@@ -52,7 +52,8 @@ impl MonitoredWebsiteRepository {
 
     pub async fn get_top5_polluting_sites_by_organization(
         pool: &MySqlPool,
-        org_id: i64, service_id: Option<i64>
+        org_id: i64,
+        service_id: Option<i64>,
     ) -> Result<Vec<TopPollutingSite>, Error> {
         let mut query = sqlx::QueryBuilder::new(
             "SELECT
@@ -63,7 +64,7 @@ impl MonitoredWebsiteRepository {
             ON u.id = mw.user_id
             JOIN organisation_user ou
             ON ou.user_id = u.id
-            WHERE ou.organisation_id = "
+            WHERE ou.organisation_id = ",
         );
         query.push_bind(org_id);
 
@@ -72,12 +73,15 @@ impl MonitoredWebsiteRepository {
             query.push_bind(sid);
         }
 
-        query.push(" AND mw.url_domain IS NOT NULL
+        query.push(
+            " AND mw.url_domain IS NOT NULL
             GROUP BY mw.url_domain
             ORDER BY total_footprint
-            DESC LIMIT 5");
+            DESC LIMIT 5",
+        );
 
-        let results = query.build_query_as::<TopPollutingSite>()
+        let results = query
+            .build_query_as::<TopPollutingSite>()
             .fetch_all(pool)
             .await?;
         Ok(results)
@@ -96,17 +100,18 @@ impl MonitoredWebsiteRepository {
             AND url_domain IS NOT NULL
             GROUP BY url_domain
             ORDER BY total_footprint DESC
-            LIMIT 5"
+            LIMIT 5",
         )
-            .bind(user_id)
-            .fetch_all(pool)
-            .await?;
+        .bind(user_id)
+        .fetch_all(pool)
+        .await?;
         Ok(result)
     }
 
     pub async fn average_daily_carbon_footprint_for_organization(
         pool: &MySqlPool,
-        org_id: i64, service_id: Option<i64>
+        org_id: i64,
+        service_id: Option<i64>,
     ) -> f64 {
         let mut query = sqlx::QueryBuilder::new(
             "SELECT ROUND(
@@ -126,7 +131,8 @@ impl MonitoredWebsiteRepository {
             query.push_bind(sid);
         }
 
-        query.build_query_as::<(f64,)>()
+        query
+            .build_query_as::<(f64,)>()
             .fetch_one(pool)
             .await
             .map(|(val,)| val)
@@ -135,7 +141,8 @@ impl MonitoredWebsiteRepository {
 
     pub async fn total_organization_consumption(
         pool: &MySqlPool,
-        org_id: i64, service_id: Option<i64>
+        org_id: i64,
+        service_id: Option<i64>,
     ) -> Result<Option<f64>, Error> {
         let mut query = sqlx::QueryBuilder::new(
             "SELECT SUM(mw.carbon_footprint) as total_consumption
@@ -144,7 +151,7 @@ impl MonitoredWebsiteRepository {
             ON mw.user_id = u.id
             JOIN organisation_user ou
             ON ou.user_id = u.id
-            WHERE ou.organisation_id = "
+            WHERE ou.organisation_id = ",
         );
         query.push_bind(org_id);
 
@@ -153,7 +160,8 @@ impl MonitoredWebsiteRepository {
             query.push_bind(sid);
         }
 
-        query.build_query_as::<(Option<f64>,)>()
+        query
+            .build_query_as::<(Option<f64>,)>()
             .fetch_one(pool)
             .await
             .map(|(val,)| val)
@@ -161,7 +169,7 @@ impl MonitoredWebsiteRepository {
 
     pub async fn get_daily_consumption_by_user(
         pool: &MySqlPool,
-        user_id: i64
+        user_id: i64,
     ) -> Result<Vec<ConsumptionDataPoint>, Error> {
         let result = sqlx::query_as::<_, ConsumptionDataPoint>(
             "SELECT
@@ -171,17 +179,17 @@ impl MonitoredWebsiteRepository {
             WHERE user_id = ?
             AND creation_date >= DATE_SUB(NOW(), INTERVAL 7 DAY)
             GROUP BY DATE(creation_date), label
-            ORDER BY DATE(creation_date) ASC"
+            ORDER BY DATE(creation_date) ASC",
         )
-            .bind(user_id)
-            .fetch_all(pool)
-            .await?;
+        .bind(user_id)
+        .fetch_all(pool)
+        .await?;
         Ok(result)
     }
 
     pub async fn get_weekly_consumption_by_user(
         pool: &MySqlPool,
-        user_id: i64
+        user_id: i64,
     ) -> Result<Vec<(i32, i32, f64)>, Error> {
         let result = sqlx::query_as::<_, (i32, i32, f64)>(
             "SELECT
@@ -192,17 +200,17 @@ impl MonitoredWebsiteRepository {
             WHERE user_id = ?
             AND creation_date >= DATE_SUB(NOW(), INTERVAL 4 WEEK)
             GROUP BY year, week
-            ORDER BY year, week ASC"
+            ORDER BY year, week ASC",
         )
-            .bind(user_id)
-            .fetch_all(pool)
-            .await?;
+        .bind(user_id)
+        .fetch_all(pool)
+        .await?;
         Ok(result)
     }
 
     pub async fn get_monthly_consumption_by_user(
         pool: &MySqlPool,
-        user_id: i64
+        user_id: i64,
     ) -> Result<Vec<ConsumptionDataPoint>, Error> {
         let result = sqlx::query_as::<_, ConsumptionDataPoint>(
             "SELECT
@@ -212,18 +220,18 @@ impl MonitoredWebsiteRepository {
             WHERE user_id = ?
             AND creation_date >= DATE_SUB(NOW(), INTERVAL 12 MONTH)
             GROUP BY YEAR(creation_date), MONTH(creation_date), label
-            ORDER BY YEAR(creation_date), MONTH(creation_date) ASC"
+            ORDER BY YEAR(creation_date), MONTH(creation_date) ASC",
         )
-            .bind(user_id)
-            .fetch_all(pool)
-            .await?;
+        .bind(user_id)
+        .fetch_all(pool)
+        .await?;
         Ok(result)
     }
 
     pub async fn get_my_average_daily_carbon_footprint(
         pool: &MySqlPool,
-        user_id: i64
-    ) -> Result<Vec<(String, f64)>, Error>  {
+        user_id: i64,
+    ) -> Result<Vec<(String, f64)>, Error> {
         let result = sqlx::query_as::<_, (String, f64)>(
             "SELECT CAST(DATE(creation_date) AS CHAR) as day, AVG(carbon_footprint) as daily_average
             FROM monitored_website
@@ -237,35 +245,38 @@ impl MonitoredWebsiteRepository {
     }
 
     pub async fn get_average_daily_carbon_footprint(
-        pool: &MySqlPool
-    ) -> Result<Vec<(String, f64)>, Error>  {
+        pool: &MySqlPool,
+    ) -> Result<Vec<(String, f64)>, Error> {
         let result = sqlx::query_as::<_, (String, f64)>(
             "SELECT
             CAST(DATE(creation_date) AS CHAR) as day,
             AVG(carbon_footprint) as daily_average
             FROM monitored_website
-            GROUP BY day"
+            GROUP BY day",
         )
-            .fetch_all(pool)
-            .await?;
+        .fetch_all(pool)
+        .await?;
         Ok(result)
     }
 
     pub async fn get_total_consumption_by_user(
         pool: &MySqlPool,
-        user_id: i64
-    ) -> Result<f64, Error>{
+        user_id: i64,
+    ) -> Result<f64, Error> {
         let result = sqlx::query_scalar::<_, f64>(
-            "SELECT SUM(carbon_footprint) FROM monitored_website WHERE user_id = ?"
+            "SELECT SUM(carbon_footprint) FROM monitored_website WHERE user_id = ?",
         )
-            .bind(user_id)
-            .fetch_one(pool)
-            .await?;
+        .bind(user_id)
+        .fetch_one(pool)
+        .await?;
         Ok(result)
     }
 
-    pub async fn get_daily_organization_consumption(pool: &MySqlPool, orga_id: i64, service_id: Option<i64>) -> Result<Vec<ConsumptionDataPoint>, Error>
-    {
+    pub async fn get_daily_organization_consumption(
+        pool: &MySqlPool,
+        orga_id: i64,
+        service_id: Option<i64>,
+    ) -> Result<Vec<ConsumptionDataPoint>, Error> {
         let mut query = sqlx::QueryBuilder::new(
             "SELECT
             DATE_FORMAT(mw.creation_date, '%d/%m') as label,
@@ -273,7 +284,7 @@ impl MonitoredWebsiteRepository {
             FROM monitored_website mw
             JOIN user u ON u.id = mw.user_id
             JOIN organisation_user ou ON ou.user_id = u.id
-            WHERE ou.organisation_id = "
+            WHERE ou.organisation_id = ",
         );
         query.push_bind(orga_id);
 
@@ -282,25 +293,31 @@ impl MonitoredWebsiteRepository {
             query.push_bind(sid);
         }
 
-        query.push(" AND mw.creation_date >= DATE_SUB(NOW(), INTERVAL 7 DAY)
+        query.push(
+            " AND mw.creation_date >= DATE_SUB(NOW(), INTERVAL 7 DAY)
             GROUP BY DATE(mw.creation_date), label
-            ORDER BY DATE(mw.creation_date) ASC");
+            ORDER BY DATE(mw.creation_date) ASC",
+        );
 
-        let result = query.build_query_as::<ConsumptionDataPoint>()
+        let result = query
+            .build_query_as::<ConsumptionDataPoint>()
             .fetch_all(pool)
             .await?;
         Ok(result)
     }
 
-    pub async fn get_weekly_organization_consumption(pool: &MySqlPool, orga_id: i64, service_id: Option<i64>) -> Result<Vec<ConsumptionDataPoint>, Error>
-    {
+    pub async fn get_weekly_organization_consumption(
+        pool: &MySqlPool,
+        orga_id: i64,
+        service_id: Option<i64>,
+    ) -> Result<Vec<ConsumptionDataPoint>, Error> {
         let mut query = sqlx::QueryBuilder::new(
             "SELECT CONCAT('Semaine ', WEEK(mw.creation_date, 1)) as label,
                         SUM(mw.carbon_footprint) as value
                   FROM monitored_website mw
                   JOIN user u ON u.id = mw.user_id
                   JOIN organisation_user ou ON ou.user_id = u.id
-                  WHERE ou.organisation_id = "
+                  WHERE ou.organisation_id = ",
         );
         query.push_bind(orga_id);
 
@@ -309,26 +326,32 @@ impl MonitoredWebsiteRepository {
             query.push_bind(sid);
         }
 
-        query.push(" AND mw.creation_date >= DATE_SUB(NOW(), INTERVAL 4 WEEK)
+        query.push(
+            " AND mw.creation_date >= DATE_SUB(NOW(), INTERVAL 4 WEEK)
                   GROUP BY WEEK(mw.creation_date, 1), label
-                  ORDER BY WEEK(mw.creation_date, 1) ASC");
+                  ORDER BY WEEK(mw.creation_date, 1) ASC",
+        );
 
-        let result = query.build_query_as::<ConsumptionDataPoint>()
+        let result = query
+            .build_query_as::<ConsumptionDataPoint>()
             .fetch_all(pool)
             .await?;
 
         Ok(result)
     }
 
-    pub async fn get_monthly_organization_consumption(pool: &MySqlPool, org_id: i64, service_id: Option<i64>) -> Result<Vec<ConsumptionDataPoint>, Error>
-    {
+    pub async fn get_monthly_organization_consumption(
+        pool: &MySqlPool,
+        org_id: i64,
+        service_id: Option<i64>,
+    ) -> Result<Vec<ConsumptionDataPoint>, Error> {
         let mut query = sqlx::QueryBuilder::new(
             "SELECT DATE_FORMAT(mw.creation_date, '%m/%Y') as label,
                         SUM(mw.carbon_footprint) as value
                   FROM monitored_website mw
                   JOIN user u ON u.id = mw.user_id
                   JOIN organisation_user ou ON ou.user_id = u.id
-                  WHERE ou.organisation_id = "
+                  WHERE ou.organisation_id = ",
         );
         query.push_bind(org_id);
 
@@ -337,11 +360,14 @@ impl MonitoredWebsiteRepository {
             query.push_bind(sid);
         }
 
-        query.push(" AND mw.creation_date >= DATE_SUB(NOW(), INTERVAL 12 MONTH)
+        query.push(
+            " AND mw.creation_date >= DATE_SUB(NOW(), INTERVAL 12 MONTH)
                   GROUP BY MONTH(mw.creation_date), YEAR(mw.creation_date), label
-                  ORDER BY YEAR(mw.creation_date), MONTH(mw.creation_date) ASC");
+                  ORDER BY YEAR(mw.creation_date), MONTH(mw.creation_date) ASC",
+        );
 
-        let result = query.build_query_as::<ConsumptionDataPoint>()
+        let result = query
+            .build_query_as::<ConsumptionDataPoint>()
             .fetch_all(pool)
             .await?;
         Ok(result)

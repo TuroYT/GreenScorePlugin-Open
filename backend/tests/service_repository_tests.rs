@@ -1,6 +1,6 @@
-use sqlx::MySqlPool;
-use backend::repository::service_repository::ServiceRepository;
 use backend::repository::organisation_repository::OrganisationRepository;
+use backend::repository::service_repository::ServiceRepository;
+use sqlx::MySqlPool;
 
 #[sqlx::test]
 async fn devrait_recuperer_un_service_par_son_id(pool: MySqlPool) {
@@ -14,14 +14,12 @@ async fn devrait_recuperer_un_service_par_son_id(pool: MySqlPool) {
 
     // 2. Insérer un service manuellement
     let service_name = "Service Test";
-    let res = sqlx::query(
-        "INSERT INTO service (nom, id_organisation) VALUES (?, ?)"
-    )
-    .bind(service_name)
-    .bind(org_id)
-    .execute(&pool)
-    .await
-    .expect("Impossible d'insérer le service");
+    let res = sqlx::query("INSERT INTO service (nom, id_organisation) VALUES (?, ?)")
+        .bind(service_name)
+        .bind(org_id)
+        .execute(&pool)
+        .await
+        .expect("Impossible d'insérer le service");
 
     let service_id = res.last_insert_id() as i64;
 
@@ -57,7 +55,10 @@ async fn devrait_recuperer_un_service_par_son_nom_et_id_organisation(pool: MySql
         .expect("Erreur lors de la récupération du service par nom");
 
     // THEN
-    assert!(found_service.is_some(), "Le service devrait être trouvé par nom");
+    assert!(
+        found_service.is_some(),
+        "Le service devrait être trouvé par nom"
+    );
     let service = found_service.unwrap();
     assert_eq!(service.nom, service_name);
     assert_eq!(service.id_organisation, org_id);
@@ -97,8 +98,12 @@ async fn devrait_recuperer_tous_les_services_d_une_organisation(pool: MySqlPool)
         .await
         .expect("Impossible d'insérer l'organisation");
 
-    ServiceRepository::create_service(&pool, "Service 1", org_id).await.unwrap();
-    ServiceRepository::create_service(&pool, "Service 2", org_id).await.unwrap();
+    ServiceRepository::create_service(&pool, "Service 1", org_id)
+        .await
+        .unwrap();
+    ServiceRepository::create_service(&pool, "Service 2", org_id)
+        .await
+        .unwrap();
 
     // WHEN
     let services = ServiceRepository::get_services_by_organisation_id(&pool, org_id)
@@ -109,11 +114,16 @@ async fn devrait_recuperer_tous_les_services_d_une_organisation(pool: MySqlPool)
     assert_eq!(services.len(), 2, "L'organisation devrait avoir 2 services");
     let has_service_1 = services.iter().any(|s| s.nom == "Service 1");
     let has_service_2 = services.iter().any(|s| s.nom == "Service 2");
-    assert!(has_service_1 && has_service_2, "Les bons services doivent être retournés");
+    assert!(
+        has_service_1 && has_service_2,
+        "Les bons services doivent être retournés"
+    );
 }
 
 #[sqlx::test]
-async fn devrait_recuperer_les_services_associes_a_l_organisation_d_un_utilisateur(pool: MySqlPool) {
+async fn devrait_recuperer_les_services_associes_a_l_organisation_d_un_utilisateur(
+    pool: MySqlPool,
+) {
     // GIVEN
     let org_name = "Org User Service";
     let org_code = "SRV_USER_01";
@@ -121,8 +131,12 @@ async fn devrait_recuperer_les_services_associes_a_l_organisation_d_un_utilisate
         .await
         .expect("Impossible d'insérer l'organisation");
 
-    ServiceRepository::create_service(&pool, "User Service A", org_id).await.unwrap();
-    ServiceRepository::create_service(&pool, "User Service B", org_id).await.unwrap();
+    ServiceRepository::create_service(&pool, "User Service A", org_id)
+        .await
+        .unwrap();
+    ServiceRepository::create_service(&pool, "User Service B", org_id)
+        .await
+        .unwrap();
 
     // Insert user mapped to this organization
     sqlx::query("INSERT INTO user (email, password, first_name, last_name, total_carbon_footprint) VALUES (?, ?, ?, ?, ?)")
@@ -141,13 +155,15 @@ async fn devrait_recuperer_les_services_associes_a_l_organisation_d_un_utilisate
         .await
         .unwrap();
 
-    sqlx::query("INSERT INTO organisation_user (user_id, organisation_id, est_admin) VALUES (?, ?, ?)")
-        .bind(user_id)
-        .bind(org_id)
-        .bind(false)
-        .execute(&pool)
-        .await
-        .unwrap();
+    sqlx::query(
+        "INSERT INTO organisation_user (user_id, organisation_id, est_admin) VALUES (?, ?, ?)",
+    )
+    .bind(user_id)
+    .bind(org_id)
+    .bind(false)
+    .execute(&pool)
+    .await
+    .unwrap();
 
     // WHEN
     let user_services = ServiceRepository::find_by_user_id(&pool, user_id)
@@ -155,7 +171,11 @@ async fn devrait_recuperer_les_services_associes_a_l_organisation_d_un_utilisate
         .expect("Erreur lors de la récupération des services via l'utilisateur");
 
     // THEN
-    assert_eq!(user_services.len(), 2, "Devrait retourner 2 services (ceux de l'orga du user)");
+    assert_eq!(
+        user_services.len(),
+        2,
+        "Devrait retourner 2 services (ceux de l'orga du user)"
+    );
 }
 
 #[sqlx::test]
@@ -196,14 +216,20 @@ async fn devrait_supprimer_un_service_par_son_id_et_dissocier_les_utilisateurs(p
 
     // THEN
     // Verif 1: the service is deleted
-    let service_in_db = ServiceRepository::find_by_id(&pool, service_id).await.unwrap();
+    let service_in_db = ServiceRepository::find_by_id(&pool, service_id)
+        .await
+        .unwrap();
     assert!(service_in_db.is_none(), "Le service devrait être supprimé");
 
     // Verif 2: user is disassociated from this service
-    let db_service_id_for_user: Option<i64> = sqlx::query_scalar("SELECT service_id FROM user WHERE id = ?")
-        .bind(user_id)
-        .fetch_one(&pool)
-        .await
-        .unwrap();
-    assert!(db_service_id_for_user.is_none(), "L'id de service pour config du user devrait être mis à NULL");
+    let db_service_id_for_user: Option<i64> =
+        sqlx::query_scalar("SELECT service_id FROM user WHERE id = ?")
+            .bind(user_id)
+            .fetch_one(&pool)
+            .await
+            .unwrap();
+    assert!(
+        db_service_id_for_user.is_none(),
+        "L'id de service pour config du user devrait être mis à NULL"
+    );
 }

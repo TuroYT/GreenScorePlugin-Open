@@ -39,7 +39,7 @@ export async function getAccount(sessionCookie: string | undefined): Promise<Use
                 return userFull;
             }
         }
-    } catch (_) {
+    } catch {
         console.error('Erreur session');
     }
 
@@ -97,6 +97,7 @@ export async function setSessionCookie(cookies: Cookies, source: Response | stri
                 return;
             }
         } catch (e) {
+            console.error('Lecture du jeton de session impossible', e);
 
         }
 

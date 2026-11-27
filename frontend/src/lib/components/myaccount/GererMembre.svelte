@@ -81,7 +81,7 @@
     }
 
     $effect(() => {
-        query;
+        void query;
         limit = 6;
     });
 

@@ -1,10 +1,7 @@
 import type { PageServerLoad } from './$types';
 import { BACKEND_URL } from "$lib/config.ts";
-import fr from '$lib/i18n/fr.json';
-import en from '$lib/i18n/en.json';
 
-function formatMonthlyData(data: Array<{ label: string; value: number }>, locale: string) {
-    const monthNames = locale === 'en' ? en.widgets.common.period.months : fr.widgets.common.period.months;
+function formatMonthlyData(data: Array<{ label: string; value: number }>, _locale: string) {
     const now = new Date();
     const result: Array<{ label: string; value: number }> = [];
     // Créer les 12 derniers mois
@@ -33,7 +30,7 @@ export const load: PageServerLoad = async ({ fetch, request, url }) => {
              locale = 'en';
         }
 
-        let query = url.searchParams.toString();
+        const query = url.searchParams.toString();
         const response = await fetch(`${BACKEND_URL}/mon-organisation${query ? '?' + query : ''}`, {
             method: 'GET',
             headers: {

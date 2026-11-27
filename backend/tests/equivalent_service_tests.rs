@@ -14,7 +14,11 @@ async fn devrait_retourner_equivalents_par_defaut_quand_aucun_user(pool: MySqlPo
         .expect("Erreur lors de la récupération des équivalents par défaut");
 
     // THEN
-    assert_eq!(results.len() as i32, n, "On devrait récupérer le nombre exact d'équivalents demandés");
+    assert_eq!(
+        results.len() as i32,
+        n,
+        "On devrait récupérer le nombre exact d'équivalents demandés"
+    );
 }
 
 #[sqlx::test]
@@ -35,7 +39,11 @@ async fn devrait_retourner_equivalents_par_defaut_quand_user_sans_selection(pool
         .expect("Erreur lors de la récupération des équivalents");
 
     // THEN
-    assert_eq!(results.len() as i32, n, "On devrait récupérer 3 équivalents (fallback défaut)");
+    assert_eq!(
+        results.len() as i32,
+        n,
+        "On devrait récupérer 3 équivalents (fallback défaut)"
+    );
 }
 
 #[sqlx::test]
@@ -51,7 +59,11 @@ async fn devrait_retourner_equivalents_utilisateur_quand_il_a_une_selection(pool
         .expect("Erreur lors de la récupération des équivalents de l'utilisateur");
 
     // THEN
-    assert_eq!(results.len(), 2, "Le service devrait retourner uniquement les équivalents sélectionnés par l'utilisateur (ici 2)");
+    assert_eq!(
+        results.len(),
+        2,
+        "Le service devrait retourner uniquement les équivalents sélectionnés par l'utilisateur (ici 2)"
+    );
 
     let names: Vec<String> = results.iter().map(|r| r.name.clone()).collect();
     assert!(names.contains(&"data.equivalent.lille_marseille".to_string()));
@@ -65,17 +77,27 @@ async fn devrait_mettre_a_jour_les_equivalents_utilisateur(pool: MySqlPool) {
     let new_selection = vec![2, 4, 5]; // IDs valides dans la migration
 
     // WHEN
-    let update_result = EquivalentService::update_user_equivalents(&pool, user_id, new_selection.clone()).await;
+    let update_result =
+        EquivalentService::update_user_equivalents(&pool, user_id, new_selection.clone()).await;
 
     // THEN
     assert!(update_result.is_ok(), "La mise à jour devrait réussir");
 
-    let selections = EquivalentService::get_all_equivalents_with_selection(&pool, user_id).await.unwrap();
+    let selections = EquivalentService::get_all_equivalents_with_selection(&pool, user_id)
+        .await
+        .unwrap();
 
     let selected_count = selections.iter().filter(|s| s.is_selected).count();
-    assert_eq!(selected_count, 3, "Il devrait y avoir maintenant 3 équivalents sélectionnés");
+    assert_eq!(
+        selected_count, 3,
+        "Il devrait y avoir maintenant 3 équivalents sélectionnés"
+    );
 
-    let selected_ids: Vec<i64> = selections.iter().filter(|s| s.is_selected).map(|s| s.id).collect();
+    let selected_ids: Vec<i64> = selections
+        .iter()
+        .filter(|s| s.is_selected)
+        .map(|s| s.id)
+        .collect();
     assert!(selected_ids.contains(&2));
     assert!(selected_ids.contains(&4));
     assert!(selected_ids.contains(&5));
@@ -93,14 +115,36 @@ async fn devrait_recuperer_tous_les_equivalents_avec_selection_utilisateur(pool:
         .expect("Erreur lors de la récupération des sélections");
 
     // THEN
-    assert_eq!(selections.len(), 10, "On devrait récupérer la liste complète des équivalents");
+    assert_eq!(
+        selections.len(),
+        10,
+        "On devrait récupérer la liste complète des équivalents"
+    );
 
-    let item_1 = selections.iter().find(|s| s.id == 1).expect("Item 1 présent");
-    assert!(item_1.is_selected, "L'item 1 devrait être sélectionné (d'après migration)");
+    let item_1 = selections
+        .iter()
+        .find(|s| s.id == 1)
+        .expect("Item 1 présent");
+    assert!(
+        item_1.is_selected,
+        "L'item 1 devrait être sélectionné (d'après migration)"
+    );
 
-    let item_3 = selections.iter().find(|s| s.id == 3).expect("Item 3 présent");
-    assert!(item_3.is_selected, "L'item 3 devrait être sélectionné (d'après migration)");
+    let item_3 = selections
+        .iter()
+        .find(|s| s.id == 3)
+        .expect("Item 3 présent");
+    assert!(
+        item_3.is_selected,
+        "L'item 3 devrait être sélectionné (d'après migration)"
+    );
 
-    let item_2 = selections.iter().find(|s| s.id == 2).expect("Item 2 présent");
-    assert!(!item_2.is_selected, "L'item 2 ne devrait pas être sélectionné");
+    let item_2 = selections
+        .iter()
+        .find(|s| s.id == 2)
+        .expect("Item 2 présent");
+    assert!(
+        !item_2.is_selected,
+        "L'item 2 ne devrait pas être sélectionné"
+    );
 }

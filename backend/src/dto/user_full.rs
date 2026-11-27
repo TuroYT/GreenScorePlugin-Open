@@ -1,12 +1,12 @@
-use crate::models::user::User;
 use crate::models::organisation::Organisation;
 use crate::models::service::Service;
+use crate::models::user::User;
 
-use serde::{Serialize, Deserialize};
+use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct UserFull {
     pub user: User,
     pub organisation: Vec<Organisation>,
-    pub service: Option<Service>
+    pub service: Option<Service>,
 }

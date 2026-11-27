@@ -175,7 +175,7 @@
         method="POST"
         action="?/deleteOrganisation"
         use:enhance={() => {
-            return async ({ result, update }) => {
+            return async ({ update }) => {
                 showDeleteModal = false;
                 await update();
             };

@@ -6,10 +6,16 @@ async fn devrait_retourner_3_advices_get_all_advice(pool: MySqlPool) {
     // GIVEN
 
     // WHEN
-    let advices = AdviceRepository::get_all_advice(&pool).await.expect("Failed to get advices");
+    let advices = AdviceRepository::get_all_advice(&pool)
+        .await
+        .expect("Failed to get advices");
 
     // THEN
-    assert_eq!(advices.len(), 40, "On devrait avoir exactement 40 conseils (ceux de la migration)");
+    assert_eq!(
+        advices.len(),
+        40,
+        "On devrait avoir exactement 40 conseils (ceux de la migration)"
+    );
 }
 
 #[sqlx::test]
@@ -26,7 +32,8 @@ async fn devrait_retourner_luminosite_get_one_random_advice_non_dev(pool: MySqlP
     // The migration data uses translation keys starting with "data.advice."
     assert!(
         advice_text.starts_with("data.advice."),
-        "Le conseil non-dev devrait être une clé de traduction commençant par 'data.advice.', reçu: {}", advice_text
+        "Le conseil non-dev devrait être une clé de traduction commençant par 'data.advice.', reçu: {}",
+        advice_text
     );
 }
 
@@ -44,6 +51,7 @@ async fn devrait_retourner_requetes_ou_fichier_get_one_random_advice_dev(pool: M
     // The migration data uses translation keys starting with "data.advice."
     assert!(
         dev_text.starts_with("data.advice."),
-        "Le conseil dev devrait être une clé de traduction commençant par 'data.advice.', reçu: {}", dev_text
+        "Le conseil dev devrait être une clé de traduction commençant par 'data.advice.', reçu: {}",
+        dev_text
     );
 }

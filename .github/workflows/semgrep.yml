@@ -1,0 +1,35 @@
+name: Semgrep
+
+on:
+  pull_request:
+    branches: ["main", "master"]
+
+permissions:
+  contents: read
+
+jobs:
+  semgrep:
+    name: Semgrep
+    runs-on: pitlane
+    if: github.event.pull_request.head.repo.full_name == github.repository
+    container:
+      image: semgrep/semgrep:1.186.0
+
+    steps:
+      - name: Checkout du code
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          fetch-depth: 0
+
+      # Ne bloque que les nouveaux problèmes par rapport à la branche de base.
+      - name: Analyse Semgrep des changements
+        env:
+          SEMGREP_SEND_METRICS: "off"
+          BASE_SHA: ${{ github.event.pull_request.base.sha }}
+        run: |
+          set -euo pipefail
+          semgrep scan \
+            --config p/default \
+            --error \
+            --metrics=off \
+            --baseline-commit "$BASE_SHA"

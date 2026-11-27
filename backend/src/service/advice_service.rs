@@ -1,5 +1,5 @@
-use crate::repository::advice_repository::AdviceRepository;
 use crate::models::advice::Advice;
+use crate::repository::advice_repository::AdviceRepository;
 pub struct AdviceService;
 
 impl AdviceService {
@@ -7,7 +7,10 @@ impl AdviceService {
         AdviceRepository::get_all_advice(pool).await
     }
 
-    pub async fn get_one_random_advice(pool: &sqlx::MySqlPool, id_dev: bool) -> Result<String, sqlx::Error> {
+    pub async fn get_one_random_advice(
+        pool: &sqlx::MySqlPool,
+        id_dev: bool,
+    ) -> Result<String, sqlx::Error> {
         AdviceRepository::get_one_random_advice_text(pool, id_dev).await
     }
 }
