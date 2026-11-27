@@ -1,6 +1,6 @@
-use sqlx::MySqlPool;
 use backend::repository::organisation_repository::OrganisationRepository;
 use backend::repository::user_repository::UserRepository;
+use sqlx::MySqlPool;
 
 #[sqlx::test]
 async fn devrait_inserer_une_organisation_et_recuperer_son_id(pool: MySqlPool) {
@@ -32,9 +32,10 @@ async fn devrait_trouver_id_par_siret(pool: MySqlPool) {
     let code = "SIRET01";
     let siret = "98765432109876";
 
-    let id = OrganisationRepository::insert_organisation(&pool, name, code, Some(siret.to_string()))
-        .await
-        .expect("Failed to insert organisation");
+    let id =
+        OrganisationRepository::insert_organisation(&pool, name, code, Some(siret.to_string()))
+            .await
+            .expect("Failed to insert organisation");
 
     // WHEN
     let found_id = OrganisationRepository::find_id_by_siret(&pool, siret)
@@ -63,7 +64,6 @@ async fn devrait_trouver_id_par_nom(pool: MySqlPool) {
     // THEN
     assert_eq!(found_id, Some(id));
 }
-
 
 #[sqlx::test]
 async fn devrait_mettre_a_jour_une_organisation(pool: MySqlPool) {

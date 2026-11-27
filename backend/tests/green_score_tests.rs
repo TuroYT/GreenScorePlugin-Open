@@ -4,12 +4,14 @@ use sqlx::{MySql, Pool};
 // --- Helper to seed data ---
 async fn seed_data(pool: &Pool<MySql>) -> (i64, i64) {
     // Create an organisation
-    let org_result = sqlx::query("INSERT INTO organisation (organisation_name, organisation_code) VALUES (?, ?)")
-        .bind("Test Org")
-        .bind("TEST_CODE")
-        .execute(pool)
-        .await
-        .expect("Failed to insert organization");
+    let org_result = sqlx::query(
+        "INSERT INTO organisation (organisation_name, organisation_code) VALUES (?, ?)",
+    )
+    .bind("Test Org")
+    .bind("TEST_CODE")
+    .execute(pool)
+    .await
+    .expect("Failed to insert organization");
     let org_id = org_result.last_insert_id() as i64;
 
     // Create a user in that organisation
@@ -58,7 +60,10 @@ async fn devrait_retourner_grade_a_pour_lpc(pool: Pool<MySql>) {
     let (grade, _) = calculate_green_score(&pool, carbon_footprint, page).await;
 
     // THEN
-    assert_eq!(grade, "A", "Le grade devrait être A pour une empreinte de 0.1 sur la page LPC");
+    assert_eq!(
+        grade, "A",
+        "Le grade devrait être A pour une empreinte de 0.1 sur la page LPC"
+    );
 }
 
 #[sqlx::test]
@@ -71,7 +76,10 @@ async fn devrait_retourner_grade_b_pour_lpc(pool: Pool<MySql>) {
     let (grade, _) = calculate_green_score(&pool, carbon_footprint, page).await;
 
     // THEN
-    assert_eq!(grade, "B", "Le grade devrait être B pour une empreinte de 0.3 sur la page LPC");
+    assert_eq!(
+        grade, "B",
+        "Le grade devrait être B pour une empreinte de 0.3 sur la page LPC"
+    );
 }
 
 #[sqlx::test]
@@ -84,7 +92,10 @@ async fn devrait_retourner_grade_g_pour_lpc(pool: Pool<MySql>) {
     let (grade, _) = calculate_green_score(&pool, carbon_footprint, page).await;
 
     // THEN
-    assert_eq!(grade, "G", "Le grade devrait être G pour une empreinte de 2.0 sur la page LPC");
+    assert_eq!(
+        grade, "G",
+        "Le grade devrait être G pour une empreinte de 2.0 sur la page LPC"
+    );
 }
 
 // --- MO Tests ---
@@ -100,7 +111,10 @@ async fn devrait_retourner_grade_a_pour_mo_normal(pool: Pool<MySql>) {
     let (grade, nom) = calculate_green_score(&pool, carbon_footprint, page).await;
 
     // THEN
-    assert_eq!(grade, "A", "Le grade devrait être A par rapport à la moyenne de l'organisation");
+    assert_eq!(
+        grade, "A",
+        "Le grade devrait être A par rapport à la moyenne de l'organisation"
+    );
     assert_eq!(nom, "nominations.profile.A");
 }
 
@@ -114,7 +128,10 @@ async fn devrait_retourner_grade_a_pour_mo_sans_donnees(pool: Pool<MySql>) {
     let (grade, _) = calculate_green_score(&pool, carbon_footprint, page).await;
 
     // THEN
-    assert_eq!(grade, "A", "Le grade devrait être A par défaut s'il n'y a pas de données");
+    assert_eq!(
+        grade, "A",
+        "Le grade devrait être A par défaut s'il n'y a pas de données"
+    );
 }
 
 #[sqlx::test]
@@ -127,7 +144,10 @@ async fn devrait_gerer_logique_echelle_etrange_mo(pool: Pool<MySql>) {
     let (grade, _) = calculate_green_score(&pool, carbon_footprint, page).await;
 
     // THEN
-    assert_eq!(grade, "A", "La fallback doit traiter la demande normalement");
+    assert_eq!(
+        grade, "A",
+        "La fallback doit traiter la demande normalement"
+    );
 }
 
 // --- My Data Tests ---
@@ -143,7 +163,10 @@ async fn devrait_retourner_grade_g_pour_my_data_normal(pool: Pool<MySql>) {
     let (grade, nom) = calculate_green_score(&pool, carbon_footprint, page).await;
 
     // THEN
-    assert_eq!(grade, "G", "L'utilisateur consomme plus que le threshold calculé et devrait avoir G");
+    assert_eq!(
+        grade, "G",
+        "L'utilisateur consomme plus que le threshold calculé et devrait avoir G"
+    );
     assert_eq!(nom, "nominations.profile.G");
 }
 
@@ -157,7 +180,10 @@ async fn devrait_retourner_grade_a_pour_my_data_sans_donnees(pool: Pool<MySql>) 
     let (grade, _) = calculate_green_score(&pool, carbon_footprint, page).await;
 
     // THEN
-    assert_eq!(grade, "A", "Le grade devrait être A par défaut s'il n'y a pas de données (fallback)");
+    assert_eq!(
+        grade, "A",
+        "Le grade devrait être A par défaut s'il n'y a pas de données (fallback)"
+    );
 }
 
 // --- Edge Cases ---
@@ -185,5 +211,8 @@ async fn devrait_retourner_na_pour_page_inconnue(pool: Pool<MySql>) {
     let (grade, _) = calculate_green_score(&pool, carbon_footprint, page).await;
 
     // THEN
-    assert_eq!(grade, "N/A", "Une page inconnue testée devrait retourner N/A");
+    assert_eq!(
+        grade, "N/A",
+        "Une page inconnue testée devrait retourner N/A"
+    );
 }

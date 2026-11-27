@@ -7,4 +7,3 @@ pub struct EquivalentSelection {
     pub icon_thumbnail: String,
     pub is_selected: bool,
 }
-

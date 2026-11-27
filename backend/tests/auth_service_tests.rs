@@ -1,6 +1,6 @@
-use sqlx::MySqlPool;
-use backend::service::auth_service::AuthService;
 use backend::error::AppError;
+use backend::service::auth_service::AuthService;
+use sqlx::MySqlPool;
 
 #[sqlx::test]
 async fn devrait_inscrire_un_nouvel_utilisateur(pool: MySqlPool) {
@@ -31,7 +31,10 @@ async fn ne_devrait_pas_inscrire_un_utilisateur_existant(pool: MySqlPool) {
     let result = AuthService::inscription(&pool, email, password, first_name, last_name).await;
 
     // THEN
-    assert!(result.is_err(), "L'inscription devrait échouer pour un email existant");
+    assert!(
+        result.is_err(),
+        "L'inscription devrait échouer pour un email existant"
+    );
     assert_eq!(result.unwrap_err(), "errors.auth.email_exists");
 }
 
@@ -50,7 +53,10 @@ async fn devrait_connecter_un_utilisateur_existant(pool: MySqlPool) {
     let result = AuthService::login(&pool, email, password).await;
 
     // THEN
-    assert!(result.is_ok(), "La connexion devrait réussir avec le bon email et le bon mot de passe");
+    assert!(
+        result.is_ok(),
+        "La connexion devrait réussir avec le bon email et le bon mot de passe"
+    );
     let user_full = result.unwrap();
     assert_eq!(user_full.user.email, email);
     assert_eq!(user_full.user.prenom, "Alice");
@@ -73,7 +79,10 @@ async fn ne_devrait_pas_connecter_un_utilisateur_avec_mauvais_mot_de_passe(pool:
     let result = AuthService::login(&pool, email, wrong_password).await;
 
     // THEN
-    assert!(result.is_err(), "La connexion devrait échouer avec le mauvais mot de passe");
+    assert!(
+        result.is_err(),
+        "La connexion devrait échouer avec le mauvais mot de passe"
+    );
     match result.unwrap_err() {
         AppError::AuthError(msg) => assert_eq!(msg, "errors.auth.invalid_credentials"),
         _ => panic!("Le type d'erreur n'est pas AppError::AuthError"),
@@ -86,7 +95,10 @@ async fn ne_devrait_pas_connecter_un_utilisateur_inexistant(pool: MySqlPool) {
     let result = AuthService::login(&pool, "nexiste_pas@example.com", "random_pwd").await;
 
     // THEN
-    assert!(result.is_err(), "La connexion devrait échouer pour un utilisateur inexistant");
+    assert!(
+        result.is_err(),
+        "La connexion devrait échouer pour un utilisateur inexistant"
+    );
     match result.unwrap_err() {
         AppError::AuthError(msg) => assert_eq!(msg, "errors.auth.invalid_credentials"),
         _ => panic!("Le type d'erreur n'est pas AppError::AuthError"),

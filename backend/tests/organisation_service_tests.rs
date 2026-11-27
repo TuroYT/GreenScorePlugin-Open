@@ -1,8 +1,8 @@
 #[cfg(test)]
 mod tests {
-    use backend::service::organisation_service::OrganisationService;
     use backend::dto::update_organisation_request_dto::UpdateOrganisationRequest;
     use backend::models::organisation::Organisation;
+    use backend::service::organisation_service::OrganisationService;
     use sqlx::MySqlPool;
 
     #[sqlx::test]
@@ -11,10 +11,16 @@ mod tests {
         let siret = "12345678901234".to_string();
 
         // WHEN
-        let org_id = OrganisationService::find_id_by_siret(&pool, siret).await.unwrap();
+        let org_id = OrganisationService::find_id_by_siret(&pool, siret)
+            .await
+            .unwrap();
 
         // THEN
-        assert_eq!(org_id, Some(1), "Devrait retourner l'ID 1 pour le siret existant");
+        assert_eq!(
+            org_id,
+            Some(1),
+            "Devrait retourner l'ID 1 pour le siret existant"
+        );
     }
 
     #[sqlx::test]
@@ -24,7 +30,9 @@ mod tests {
         let user_id = 1;
 
         // WHEN
-        let infos = OrganisationService::organization_informations(&pool, org_id, user_id, None).await.unwrap();
+        let infos = OrganisationService::organization_informations(&pool, org_id, user_id, None)
+            .await
+            .unwrap();
 
         // THEN
         assert_eq!(infos.name, "Test Organisation");
@@ -38,7 +46,9 @@ mod tests {
         let user_id = 3;
 
         // WHEN
-        let infos = OrganisationService::organization_informations(&pool, org_id, user_id, None).await.unwrap();
+        let infos = OrganisationService::organization_informations(&pool, org_id, user_id, None)
+            .await
+            .unwrap();
         let equivalent = infos.equivalent.expect("Un equivalent doit etre present");
 
         // THEN
@@ -76,7 +86,10 @@ mod tests {
         };
 
         // WHEN
-        let updated_org = OrganisationService::update_organisation_details(&pool, &current_org, payload).await.unwrap();
+        let updated_org =
+            OrganisationService::update_organisation_details(&pool, &current_org, payload)
+                .await
+                .unwrap();
 
         // THEN
         assert_eq!(updated_org.nom, "Nouveau Nom Organisation");
@@ -91,10 +104,15 @@ mod tests {
         let siret = Some("nouv-siret".to_string());
 
         // WHEN
-        let (org_id, code) = OrganisationService::inscription_orga(&pool, nom, siret, user_id).await.unwrap();
+        let (org_id, code) = OrganisationService::inscription_orga(&pool, nom, siret, user_id)
+            .await
+            .unwrap();
 
         // THEN
-        assert!(org_id > 1, "Devrait créer une organisation avec un nouvel ID");
+        assert!(
+            org_id > 1,
+            "Devrait créer une organisation avec un nouvel ID"
+        );
         assert_eq!(code.len(), 8, "Le code généré devrait faire 8 caractères");
     }
 
@@ -116,7 +134,8 @@ mod tests {
         let org_id = 1;
 
         // WHEN
-        let res = OrganisationService::get_daily_organization_consumption(&pool, org_id, None).await;
+        let res =
+            OrganisationService::get_daily_organization_consumption(&pool, org_id, None).await;
 
         // THEN
         assert!(res.is_ok(), "Devrait récupérer les données journalières");
@@ -128,7 +147,8 @@ mod tests {
         let org_id = 1;
 
         // WHEN
-        let res = OrganisationService::get_weekly_organization_consumption(&pool, org_id, None).await;
+        let res =
+            OrganisationService::get_weekly_organization_consumption(&pool, org_id, None).await;
 
         // THEN
         assert!(res.is_ok(), "Devrait récupérer les données hebdomadaires");
@@ -140,7 +160,8 @@ mod tests {
         let org_id = 1;
 
         // WHEN
-        let res = OrganisationService::get_monthly_organization_consumption(&pool, org_id, None).await;
+        let res =
+            OrganisationService::get_monthly_organization_consumption(&pool, org_id, None).await;
 
         // THEN
         assert!(res.is_ok(), "Devrait récupérer les données mensuelles");
@@ -163,12 +184,20 @@ mod tests {
             .unwrap();
 
         // WHEN
-        let res = OrganisationService::get_top5_polluting_sites_by_organization(&pool, org_id, None).await;
+        let res =
+            OrganisationService::get_top5_polluting_sites_by_organization(&pool, org_id, None)
+                .await;
 
         // THEN
-        assert!(res.is_ok(), "Devrait récupérer le top 5 des sites polluants");
+        assert!(
+            res.is_ok(),
+            "Devrait récupérer le top 5 des sites polluants"
+        );
         let sites = res.unwrap();
         assert_eq!(sites.len(), 1);
-        assert_eq!(sites[0].total_footprint, 1.23, "La valeur de carbon_footprint devrait être arrondie à deux décimales");
+        assert_eq!(
+            sites[0].total_footprint, 1.23,
+            "La valeur de carbon_footprint devrait être arrondie à deux décimales"
+        );
     }
 }

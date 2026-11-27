@@ -1,14 +1,14 @@
-use sqlx::MySqlPool;
 use crate::models::equivalent::Equivalent;
+use sqlx::MySqlPool;
 
 pub struct EquivalentRepository;
 
 impl EquivalentRepository {
-
-    pub async fn get_n_user_equivalent(pool: &MySqlPool,
-                                  user_id: i64,
-                                  n: i32,
-                                  carbon_footprint_in_kg: f64
+    pub async fn get_n_user_equivalent(
+        pool: &MySqlPool,
+        user_id: i64,
+        n: i32,
+        carbon_footprint_in_kg: f64,
     ) -> Result<Vec<Equivalent>, sqlx::Error> {
         sqlx::query_as::<_, Equivalent>(
             "SELECT DISTINCT e.name, ROUND(? * e.equivalent, 2) as value, e.icon_thumbnail as icon
@@ -27,9 +27,10 @@ impl EquivalentRepository {
         .await
     }
 
-    pub async fn get_n_equivalent(pool: &MySqlPool,
-                                  n: i32,
-                                  carbon_footprint_in_kg: f64
+    pub async fn get_n_equivalent(
+        pool: &MySqlPool,
+        n: i32,
+        carbon_footprint_in_kg: f64,
     ) -> Result<Vec<Equivalent>, sqlx::Error> {
         sqlx::query_as::<_, Equivalent>(
             "SELECT name, ROUND(? * equivalent, 2) as value, icon_thumbnail as icon
@@ -45,7 +46,10 @@ impl EquivalentRepository {
         .await
     }
 
-    pub async fn get_all_equivalents_with_selection(pool: &MySqlPool, user_id: i64) -> Result<Vec<(i64, String, String, bool)>, sqlx::Error> {
+    pub async fn get_all_equivalents_with_selection(
+        pool: &MySqlPool,
+        user_id: i64,
+    ) -> Result<Vec<(i64, String, String, bool)>, sqlx::Error> {
         sqlx::query_as::<_, (i64, String, String, bool)>(
             "SELECT e.id, e.name, e.icon_thumbnail, (u.user_id IS NOT NULL) AS is_selected
               FROM equivalent e LEFT JOIN user_equivalent u ON e.id = u.equivalent_id AND u.user_id = ?"
@@ -55,7 +59,11 @@ impl EquivalentRepository {
             .await
     }
 
-    pub async fn update_user_equivalents(pool: &MySqlPool, user_id: i64, equivalent_ids: Vec<i64>) -> Result<(), sqlx::Error> {
+    pub async fn update_user_equivalents(
+        pool: &MySqlPool,
+        user_id: i64,
+        equivalent_ids: Vec<i64>,
+    ) -> Result<(), sqlx::Error> {
         let mut tx = pool.begin().await?;
 
         sqlx::query("DELETE FROM user_equivalent WHERE user_id = ?")

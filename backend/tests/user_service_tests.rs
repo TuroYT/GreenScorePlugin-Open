@@ -28,15 +28,24 @@ async fn devrait_confirmer_email_inexistant(pool: MySqlPool) {
     let exists = UserService::user_with_email_exists(&pool, email.to_string()).await;
 
     // THEN
-    assert!(!exists, "Un email non présent ne doit pas être considéré existant");
+    assert!(
+        !exists,
+        "Un email non présent ne doit pas être considéré existant"
+    );
 }
 
 #[sqlx::test]
 async fn devrait_mettre_a_jour_utilisateur_et_hasher_mot_de_passe(pool: MySqlPool) {
     // GIVEN
-    let user_id = UserRepository::insert_user(&pool, "update_service_old@test.com", "old_pwd", "Old", "User")
-        .await
-        .expect("Failed to insert user");
+    let user_id = UserRepository::insert_user(
+        &pool,
+        "update_service_old@test.com",
+        "old_pwd",
+        "Old",
+        "User",
+    )
+    .await
+    .expect("Failed to insert user");
 
     let current_user = User {
         id: user_id,
@@ -72,7 +81,10 @@ async fn devrait_mettre_a_jour_utilisateur_et_hasher_mot_de_passe(pool: MySqlPoo
 
     assert_eq!(first_name, "Nouveau");
     assert_eq!(last_name, "Nom");
-    assert_ne!(stored_hash, "motdepasse123", "Le mot de passe doit etre hashe");
+    assert_ne!(
+        stored_hash, "motdepasse123",
+        "Le mot de passe doit etre hashe"
+    );
     assert!(
         bcrypt::verify("motdepasse123", &stored_hash).expect("bcrypt verify failed"),
         "Le hash stocke doit correspondre au mot de passe fourni"
@@ -86,9 +98,10 @@ async fn devrait_refuser_mise_a_jour_si_email_deja_utilise(pool: MySqlPool) {
         .await
         .expect("Failed to insert existing user");
 
-    let user_id = UserRepository::insert_user(&pool, "editable_user@test.com", "pwd", "Edit", "User")
-        .await
-        .expect("Failed to insert editable user");
+    let user_id =
+        UserRepository::insert_user(&pool, "editable_user@test.com", "pwd", "Edit", "User")
+            .await
+            .expect("Failed to insert editable user");
 
     let current_user = User {
         id: user_id,
@@ -128,16 +141,27 @@ async fn devrait_rejoindre_organisation_avec_code_valide(pool: MySqlPool) {
     assert_eq!(joined_org.id, 1);
     assert_eq!(joined_org.code, "TEST_ORG");
 
-    let membership = sqlx::query("SELECT est_admin FROM organisation_user WHERE user_id = ? AND organisation_id = ?")
-        .bind(user_id)
-        .bind(1)
-        .fetch_optional(&pool)
-        .await
-        .expect("Failed to query organisation_user");
+    let membership = sqlx::query(
+        "SELECT est_admin FROM organisation_user WHERE user_id = ? AND organisation_id = ?",
+    )
+    .bind(user_id)
+    .bind(1)
+    .fetch_optional(&pool)
+    .await
+    .expect("Failed to query organisation_user");
 
-    assert!(membership.is_some(), "Le user devrait etre lie a l'organisation");
-    let est_admin: bool = membership.unwrap().try_get("est_admin").expect("Failed to get est_admin");
-    assert!(!est_admin, "Le join via ce service doit ajouter un membre non admin");
+    assert!(
+        membership.is_some(),
+        "Le user devrait etre lie a l'organisation"
+    );
+    let est_admin: bool = membership
+        .unwrap()
+        .try_get("est_admin")
+        .expect("Failed to get est_admin");
+    assert!(
+        !est_admin,
+        "Le join via ce service doit ajouter un membre non admin"
+    );
 }
 
 #[sqlx::test]
@@ -175,8 +199,14 @@ async fn devrait_recuperer_membres_organisation(pool: MySqlPool) {
         .expect("Failed to get organization members");
 
     // THEN
-    assert!(members.iter().any(|m| m.id == 1), "Le user seed id=1 doit etre present");
-    let user_1 = members.into_iter().find(|m| m.id == 1).expect("Le membre id=1 devrait exister");
+    assert!(
+        members.iter().any(|m| m.id == 1),
+        "Le user seed id=1 doit etre present"
+    );
+    let user_1 = members
+        .into_iter()
+        .find(|m| m.id == 1)
+        .expect("Le membre id=1 devrait exister");
     assert_eq!(user_1.service_name, Some("Test Service".to_string()));
 }
 
@@ -192,28 +222,37 @@ async fn devrait_supprimer_membre_organisation_et_retirer_service_associe(pool: 
         .expect("La suppression du membre devrait reussir");
 
     // THEN
-    let service_id_after: Option<i64> = sqlx::query_scalar("SELECT service_id FROM user WHERE id = ?")
-        .bind(user_id)
-        .fetch_one(&pool)
-        .await
-        .expect("Failed to query user service_id");
-    assert!(service_id_after.is_none(), "Le service doit etre retire pour cette organisation");
+    let service_id_after: Option<i64> =
+        sqlx::query_scalar("SELECT service_id FROM user WHERE id = ?")
+            .bind(user_id)
+            .fetch_one(&pool)
+            .await
+            .expect("Failed to query user service_id");
+    assert!(
+        service_id_after.is_none(),
+        "Le service doit etre retire pour cette organisation"
+    );
 
-    let membership_after = sqlx::query("SELECT 1 FROM organisation_user WHERE user_id = ? AND organisation_id = ?")
-        .bind(user_id)
-        .bind(orga_id)
-        .fetch_optional(&pool)
-        .await
-        .expect("Failed to query membership after delete");
-    assert!(membership_after.is_none(), "Le lien organisation_user doit etre supprime");
+    let membership_after =
+        sqlx::query("SELECT 1 FROM organisation_user WHERE user_id = ? AND organisation_id = ?")
+            .bind(user_id)
+            .bind(orga_id)
+            .fetch_optional(&pool)
+            .await
+            .expect("Failed to query membership after delete");
+    assert!(
+        membership_after.is_none(),
+        "Le lien organisation_user doit etre supprime"
+    );
 }
 
 #[sqlx::test]
 async fn devrait_supprimer_utilisateur(pool: MySqlPool) {
     // GIVEN
-    let user_id = UserRepository::insert_user(&pool, "delete_user_service@test.com", "pwd", "To", "Delete")
-        .await
-        .expect("Failed to insert user");
+    let user_id =
+        UserRepository::insert_user(&pool, "delete_user_service@test.com", "pwd", "To", "Delete")
+            .await
+            .expect("Failed to insert user");
 
     // WHEN
     UserService::delete_user(&pool, user_id)
@@ -226,7 +265,6 @@ async fn devrait_supprimer_utilisateur(pool: MySqlPool) {
         .expect("Failed to query user after delete");
     assert!(found.is_none(), "L'utilisateur ne doit plus exister");
 }
-
 
 #[sqlx::test]
 async fn devrait_retourner_erreur_mise_a_jour_si_pool_ferme(pool: MySqlPool) {

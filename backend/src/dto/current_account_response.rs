@@ -1,6 +1,6 @@
-use serde::Serialize;
 use crate::dto::user_full::UserFull;
 use crate::models::service::Service;
+use serde::Serialize;
 
 #[derive(Serialize)]
 pub struct CurrentAccountResponse {

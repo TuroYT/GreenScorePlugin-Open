@@ -3,15 +3,10 @@
     import { copyToClipboard} from "$lib/utils/clipboard.ts";
 
     let { code }: { code?: string } = $props();
-    let copied = $state(false);
     async function handleCopy() {
         if (!code) return;
 
         await copyToClipboard(code);
-        copied = true;
-        setTimeout(() => {
-            copied = false;
-        }, 2000);
     }
 </script>
 

@@ -32,10 +32,12 @@ impl fmt::Debug for MySqlStore {
 
 #[async_trait]
 impl tower_sessions::SessionStore for MySqlStore {
-    async fn create(&self, record: &mut tower_sessions::session::Record) -> Result<(), SessionError> {
+    async fn create(
+        &self,
+        record: &mut tower_sessions::session::Record,
+    ) -> Result<(), SessionError> {
         let id = record.id.to_string();
-        let data = serde_json::to_vec(record)
-            .map_err(|e| SessionError::Encode(e.to_string()))?;
+        let data = serde_json::to_vec(record).map_err(|e| SessionError::Encode(e.to_string()))?;
         let expires_at = record.expiry_date.unix_timestamp();
 
         sqlx::query!(
@@ -44,16 +46,15 @@ impl tower_sessions::SessionStore for MySqlStore {
             data,
             expires_at
         )
-            .execute(&self.pool)
-            .await
-            .map_err(|e: sqlx::Error| SessionError::Backend(e.to_string()))?;
+        .execute(&self.pool)
+        .await
+        .map_err(|e: sqlx::Error| SessionError::Backend(e.to_string()))?;
         Ok(())
     }
 
     async fn save(&self, record: &tower_sessions::session::Record) -> Result<(), SessionError> {
         let id = record.id.to_string();
-        let data = serde_json::to_vec(record)
-            .map_err(|e| SessionError::Encode(e.to_string()))?;
+        let data = serde_json::to_vec(record).map_err(|e| SessionError::Encode(e.to_string()))?;
         let expires_at = record.expiry_date.unix_timestamp();
 
         sqlx::query!(
@@ -66,31 +67,37 @@ impl tower_sessions::SessionStore for MySqlStore {
             data,
             expires_at
         )
-            .execute(&self.pool)
-            .await
-            .map_err(|e: sqlx::Error| SessionError::Backend(e.to_string()))?;
+        .execute(&self.pool)
+        .await
+        .map_err(|e: sqlx::Error| SessionError::Backend(e.to_string()))?;
         Ok(())
     }
 
-    async fn load(&self, session_id: &tower_sessions::session::Id) -> Result<Option<tower_sessions::session::Record>, SessionError> {
+    async fn load(
+        &self,
+        session_id: &tower_sessions::session::Id,
+    ) -> Result<Option<tower_sessions::session::Record>, SessionError> {
         let id_str = session_id.to_string();
-        let row = sqlx::query!("SELECT data, expires_at FROM sessions WHERE id = ? LIMIT 1", id_str)
-            .fetch_optional(&self.pool)
-            .await
-            .map_err(|e: sqlx::Error| SessionError::Backend(e.to_string()))?;
+        let row = sqlx::query!(
+            "SELECT data, expires_at FROM sessions WHERE id = ? LIMIT 1",
+            id_str
+        )
+        .fetch_optional(&self.pool)
+        .await
+        .map_err(|e: sqlx::Error| SessionError::Backend(e.to_string()))?;
 
         if let Some(r) = row {
-            if let Some(exp) = r.expires_at {
-                if exp <= Self::now_unix() {
-                    sqlx::query!("DELETE FROM sessions WHERE id = ?", id_str)
-                        .execute(&self.pool)
-                        .await
-                        .map_err(|e: sqlx::Error| SessionError::Backend(e.to_string()))?;
-                    return Ok(None);
-                }
+            if let Some(exp) = r.expires_at
+                && exp <= Self::now_unix()
+            {
+                sqlx::query!("DELETE FROM sessions WHERE id = ?", id_str)
+                    .execute(&self.pool)
+                    .await
+                    .map_err(|e: sqlx::Error| SessionError::Backend(e.to_string()))?;
+                return Ok(None);
             }
-            let record = serde_json::from_slice(&r.data)
-                .map_err(|e| SessionError::Decode(e.to_string()))?;
+            let record =
+                serde_json::from_slice(&r.data).map_err(|e| SessionError::Decode(e.to_string()))?;
             Ok(Some(record))
         } else {
             Ok(None)
